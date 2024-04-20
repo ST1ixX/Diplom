@@ -12,8 +12,6 @@ db = SQLAlchemy(app)
 
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), nullable=False)
-    surname = db.Column(db.String(30), nullable=False)
     id_zachet = db.Column(db.Integer, nullable=False, unique=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(20), nullable=False)
@@ -46,7 +44,6 @@ class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     time = db.Column(db.DateTime, default=datetime.utcnow)
-    topic = db.Column(db.String(50), nullable=False)
     intro_text = db.Column(db.String(200), nullable=False)
     full_text = db.Column(db.Text, nullable=False)
 
@@ -74,6 +71,77 @@ def upload_video():
         video.save(os.path.join('./upload-video', filename))
         return 'Видео успешно загружено', 200
     return 'Ошибка при загрузке видео', 400
+
+
+@app.route('/payment')
+def payment():
+    return render_template('payment.html')
+
+@app.route('/add_money', methods=['POST', 'GET'])
+def add_money():
+    if request.method == 'POST':
+        id_users = request.form['id_users']
+        amount = request.form['amount']
+        return f'id_users: {id_users}, amount: {amount}'
+    else:
+        return render_template('add_money.html')
+    
+
+@app.route('/add_news', methods=['POST', 'GET'])
+def add_news():
+    if request.method == 'POST':
+        title = request.form['title']
+        intro_text = request.form['intro_text']
+        full_text = request.form['full_text']
+        
+        news = News(title=title, intro_text=intro_text, full_text=full_text)
+
+        try:
+            db.session.add(news)
+            db.session.commit()
+            return redirect('/')
+        except:
+            return "Ошибка при добавлении новости"
+        
+    else:
+        return render_template('add_news.html')
+    
+@app.route('/news')
+def news():
+    news = News.query.order_by(News.time.desc()).all()
+    return render_template('news.html', news=news)
+
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/register', methods=['POST', 'GET'])
+def register_user():
+    if request.method == 'POST':
+        email = request.form['email_reg']
+        id_zachet = request.form['id_zachet_reg']
+        password = request.form['password_reg']
+        repeat_password = request.form['repeat_password_reg']
+
+        existing_user = Users.query.filter_by(id_zachet=id_zachet).first()
+
+        if existing_user:
+            return 'Пользователь с таким номером зачетной книжки уже зарегистрирован'
+
+        if password != repeat_password:
+            return 'Пароли не совпадают'
+
+        users = Users(id_zachet=id_zachet, email=email, password=password)
+
+        try:
+            db.session.add(users)
+            db.session.commit()
+            return redirect('/')
+        except:
+            return "Ошибка при регистрации"
+
+    
 
 if __name__ == '__main__':
     with app.app_context():

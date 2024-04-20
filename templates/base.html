@@ -4,60 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="shortcut icon" href="https://icons8.ru/icon/ckrjM2xjKegD/cash" type="image/x-icon">
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
+    <nav class="header">
+        <div class="header__menu">
+            <ul>
+                <li class="list">
+                    <a href="/add_news">
+                        <span class="icon">
+                        <ion-icon name="newspaper-outline"></ion-icon></span>
+                        <span class="text">Новости</span>
+                    </a>
+                </li>
+                <li class="list">
+                    <a href="/about">
+                        <span class="icon">
+                        <ion-icon name="help-outline"></ion-icon></span>
+                        <span class="text">О нас</span>
+                    </a>
+                </li>
+                <li class="list">
+                    <a href="#">
+                        <span class="icon">
+                        <ion-icon name="hammer-outline"></ion-icon></span>
+                        <span class="text">Услуги</span>
+                    </a>
+                </li>
+                <li class="list">
+                    <a href="#">
+                        <span class="icon">
+                        <ion-icon name="card-outline"></ion-icon></span>
+                        <span class="text">Мои покупки</span>
+                    </a>
+                </li>
+                <li class="list">
+                    <a href="/profile" id="auth">
+                        <span class="icon">
+                            <ion-icon name="person-outline"></ion-icon>
+                        </span>
+                        <span class="text">Профиль</span>                           
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
     <div class="container">
-        <nav class="header">
-            <div class="header__menu">
-                <ul>
-                    <li class="list">
-                        <a href="#">
-                            <span class="icon">
-                            <ion-icon name="newspaper-outline"></ion-icon></span>
-                            <span class="text">Новости</span>
-                        </a>
-                    </li>
-                    <li class="list">
-                        <a href="/about">
-                            <span class="icon">
-                            <ion-icon name="help-outline"></ion-icon></span>
-                            <span class="text">О нас</span>
-                        </a>
-                    </li>
-                    <li class="list">
-                        <a href="#">
-                            <span class="icon">
-                            <ion-icon name="hammer-outline"></ion-icon></span>
-                            <span class="text">Услуги</span>
-                        </a>
-                    </li>
-                    <li class="list">
-                        <a href="#">
-                            <span class="icon">
-                            <ion-icon name="card-outline"></ion-icon></span>
-                            <span class="text">Мои покупки</span>
-                        </a>
-                    </li>
-                    <li class="list">
-                        <a href="/profile" id="auth">
-                            <span class="icon">
-                                <ion-icon name="person-outline"></ion-icon>
-                            </span>
-                            <span class="text">Профиль</span>                           
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
         {% block content %}{% endblock %}
+    </div>
     </div>
     <div class="modal__box" id="my-modal">
         <div class="modal__content">
             <button id="close-btn">
-                <img src="images/cross.png" alt="Закрыть">
+                <img src="{{ url_for('static', filename='images/cross.png') }}" alt="Закрыть">
             </button>
-            <form action="include/login.php" method="post" id="login-form" >
+            <form method="post" id="login-form" >
                 <h2>Log in</h2>
                 <label for="email">Email
                     <input type="email" id="email" placeholder="Почта" name="email_login" class="input__conteiner">
@@ -81,15 +83,15 @@
     <div class="popup__register" id="reg__modal">
         <div class="modal__register">
             <button id="close-reg-btn">
-                <img src="images/cross.png" alt="Закрыть">
+                <img src="{{ url_for('static', filename='images/cross.png') }}" alt="Закрыть">
             </button>
-            <form action="include/register.php" method="post" id="register-form" >
+            <form method="post" id="register-form" >
                 <h2>Register</h2>
                 <label for="email">Email
                     <input type="email" id="email_reg" placeholder="Почта" name="email_reg" class="input__conteiner">
                 </label>
-                <label for="phone">Контактный номер телефона
-                    <input type="tel" id="phone" placeholder="Телефон" name="phone_reg" class="input__conteiner">
+                <label for="id_zachet_reg">Номер зачетной книжки
+                    <input type="number" id="id_zachet_reg" placeholder="Номер зачетной книжки" name="id_zachet_reg" class="input__conteiner">
                 </label>
                 <label for="password">Password
                     <input type="password" id="password_reg" placeholder="Пароль" name="password_reg" class="input__conteiner">

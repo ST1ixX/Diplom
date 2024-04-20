@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Add News</h1>
+    <form method="post">
+        <input type="text" name="title" placeholder="Title">
+        <textarea name="intro_text" placeholder="intro_text"></textarea>
+        <textarea name="full_text" placeholder="full_text"></textarea>
+        <button type="submit">Add News</button>
+    </form>
+{% endblock %}
+
+
