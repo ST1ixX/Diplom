@@ -40,11 +40,19 @@
                     </a>
                 </li>
                 <li class="list">
-                    <a href="/profile" id="auth">
+                    <a href="/profile">
                         <span class="icon">
                             <ion-icon name="person-outline"></ion-icon>
                         </span>
                         <span class="text">Профиль</span>                           
+                    </a>
+                </li>
+                <li class="list">
+                    <a href="#" id="auth">
+                        <span class="icon">
+                            <ion-icon name="person-add-outline"></ion-icon>
+                        </span>
+                        <span class="text">Регистрация/Авторизация</span>                           
                     </a>
                 </li>
             </ul>
@@ -59,13 +67,13 @@
             <button id="close-btn">
                 <img src="{{ url_for('static', filename='images/cross.png') }}" alt="Закрыть">
             </button>
-            <form method="post" id="login-form" >
+            <form method="post" id="login-form" action="{{ url_for('login_user') }}">
                 <h2>Log in</h2>
-                <label for="email">Email
-                    <input type="email" id="email" placeholder="Почта" name="email_login" class="input__conteiner">
+                <label for="id_zachet">Номер зачетной книжки
+                    <input type="number" id="id_zachet" placeholder="Номер зачетной книжки" name="id_zachet_login" class="input__conteiner">
                 </label>
                 <label for="password">Password
-                    <input type="password" id="password" placeholder="Пароль" name="password_login" class="input__conteiner">
+                    <input type="password" id="password_login" placeholder="Пароль" name="password_login" class="input__conteiner">
                 </label>
                 <label for="remember-me">Запомнить меня
                     <input type="checkbox" id="remember-me">
@@ -85,7 +93,7 @@
             <button id="close-reg-btn">
                 <img src="{{ url_for('static', filename='images/cross.png') }}" alt="Закрыть">
             </button>
-            <form method="post" id="register-form" >
+            <form method="post" action="{{ url_for('register_user') }}" id="register-form">
                 <h2>Register</h2>
                 <label for="email">Email
                     <input type="email" id="email_reg" placeholder="Почта" name="email_reg" class="input__conteiner">

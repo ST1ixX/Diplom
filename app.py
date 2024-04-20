@@ -1,13 +1,16 @@
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 import os
+import traceback
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.secret_key = 'your_secret_key_here'
 db = SQLAlchemy(app)
 
 class Users(db.Model):
@@ -82,7 +85,15 @@ def add_money():
     if request.method == 'POST':
         id_users = request.form['id_users']
         amount = request.form['amount']
-        return f'id_users: {id_users}, amount: {amount}'
+        
+        try:
+            user = Users.query.filter_by(id_zachet=id_users).first()
+            user.balance += int(amount)
+            db.session.commit()
+            return redirect('/profile')
+        except Exception as e:
+            traceback.print_exc()
+            return f"Ошибка при добавлении денег: {str(e)}"
     else:
         return render_template('add_money.html')
     
@@ -99,6 +110,7 @@ def add_news():
         try:
             db.session.add(news)
             db.session.commit()
+            db.session.close()
             return redirect('/')
         except:
             return "Ошибка при добавлении новости"
@@ -112,9 +124,19 @@ def news():
     return render_template('news.html', news=news)
 
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
+@app.route('/login_user', methods=['POST', 'GET'])
+def login_user():
+    if request.method == 'POST':
+        id_zachet = request.form['id_zachet_login']
+        password = request.form['password_login']
+
+        user_login = Users.query.filter_by(id_zachet=id_zachet).first()
+        if user_login and check_password_hash(user_login.password, password):
+            session['id_zachet'] = user_login.id_zachet
+            session['balance'] = user_login.balance
+            return redirect('/profile')
+        else:
+            return 'Неверный номер зачетной книжки или пароль'
 
 @app.route('/register', methods=['POST', 'GET'])
 def register_user():
@@ -131,15 +153,18 @@ def register_user():
 
         if password != repeat_password:
             return 'Пароли не совпадают'
-
-        users = Users(id_zachet=id_zachet, email=email, password=password)
+        
+        hashed_password = generate_password_hash(password)
+        users = Users(id_zachet=id_zachet, email=email, password=hashed_password)
 
         try:
             db.session.add(users)
             db.session.commit()
-            return redirect('/')
-        except:
-            return "Ошибка при регистрации"
+            db.session.close()
+            return redirect('/news')
+        except Exception as e:
+            traceback.print_exc()
+            return f"Ошибка при регистрации: {str(e)}"
 
     
 

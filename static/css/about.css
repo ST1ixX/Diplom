@@ -1,0 +1,24 @@
+  /* Информация */
+  .info__container{
+    height: 400px;
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+    background-color: #1b17174d;
+    font-size: 40px;
+    color: #fdfdfd;
+  
+  }
+  
+  .yan__map {
+    display: flex;
+    justify-content: center;
+    background-color: azure;
+    width: 30%;
+    height: 100%;
+  }
+  
+  .info{
+    width: 70%;
+  }
+    

@@ -4,6 +4,20 @@
 
 {% block content %}
     <h1>О нас</h1>
+    <div class="info__container">
+        <div class="yan__map" id="map"></div>
+        <div class="info">
+
+        Адрес компании: г. Ростов-на-Дону, площадь Гагарина, 1 <br>
+
+        Электронная почта: info@stroyinvestrostov.ru <br>
+
+        Телефон: +7-900-123-45-67
+        </div>
+    </div>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=20b011ec-7c4a-4ea2-9eae-a8df4f417667&lang=ru_RU"></script>
+    <script src="{{ url_for('static', filename='js/about.js') }}"></script>
 {% endblock %}
 
 
