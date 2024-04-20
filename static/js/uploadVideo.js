@@ -44,5 +44,5 @@ startRecordingButton.addEventListener('click', () => {
         stream.getTracks().forEach(track => track.stop());
         startRecordingButton.removeAttribute("disabled");
         console.log("Запись остановлена");
-    }, 5000); // Запись останавливается через 5 секунд
+    }, 30000); // Запись останавливается через 5 секунд
 });

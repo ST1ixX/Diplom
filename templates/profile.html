@@ -3,15 +3,18 @@
 {% block content %}
     <h1>Профиль</h1>
     <div class="wrapper">
-        <div class="balance">
-            <h2>Ваш баланс: 0</h2>
-        </div>
-        <div class="id">
-            <h2>Ваш ID: 0</h2>
+        <div class="user-info">
+            <div class="balance">
+                <h2>Ваш баланс: 0</h2>
+            </div>
+            <div class="id">
+                <h2>Ваш ID: 0</h2>
+            </div>
         </div>
     </div>
     <button id="start-recording">Начать запись</button>
     <script src="{{ url_for('static', filename='js/uploadVideo.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
 {% endblock %}
 
 
