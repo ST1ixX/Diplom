@@ -58,7 +58,7 @@
                 </li>
                 {% else %}
                 <li class="list">
-                    <a href="/logout" id="auth">
+                    <a href="/logout" id="log-out">
                         <span class="icon">
                             <ion-icon name="log-out-outline"></ion-icon>
                         </span>
@@ -78,7 +78,7 @@
             <button id="close-btn">
                 <img src="{{ url_for('static', filename='images/cross.png') }}" alt="Закрыть">
             </button>
-            <form method="post" id="login-form">
+            <form action="/login" method="post" id="login-form">
                 <h2>Log in</h2>
                 <label for="id_zachet">Номер зачетной книжки
                     <input type="number" id="id_zachet" placeholder="Номер зачетной книжки" name="id_zachet_login" class="input__conteiner">

@@ -173,17 +173,17 @@ def register_user():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('news'))  # Предполагаем, что вы хотите перенаправить на страницу новостей
+        return redirect('/')  
     if request.method == 'POST':
         id_zachet = request.form['id_zachet_login']
         password = request.form['password_login']
         user = Users.query.filter_by(id_zachet=id_zachet).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for('news'))  # Исправлено на 'news', предполагая, что это ваша целевая страница
+            return redirect('/')  
         else:
             return 'Неверный номер зачетной книжки или пароль'
-    return render_template('login.html')
+    return render_template('profile.html')
 
 @app.route('/logout')
 @login_required
