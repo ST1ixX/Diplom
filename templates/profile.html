@@ -5,16 +5,26 @@
     <div class="wrapper">
         <div class="user-info">
             <div class="balance">
-                <h2>Ваш баланс: {{ session['balance'] }}</h2>
+                <h2>Ваш баланс: {{ current_user.balance }}</h2>
             </div>
             <div class="id">
-                <h2>Ваш ID: {{ session['id_zachet'] }}</h2>
+                <h2>Ваш ID: {{ current_user.id_zachet }}</h2>
+            </div>
+            <div class="pincode">
+                <h2>Ваш пинкод: {{ current_user.pin_code }}</h2>
             </div>
         </div>
     </div>
     <button id="start-recording">Начать запись</button>
+    <form method="POST" id="set-pincode">
+        <input type="text" name="pin_code" placeholder="Введите пинкод">
+        <button type="submit">Назначить пинкод</button>
+    </form>
     <script src="{{ url_for('static', filename='js/uploadVideo.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+    <script>
+        var userId = "{{ current_user.id_zachet }}"; // Теперь userId доступен в вашем JavaScript коде
+    </script>
 {% endblock %}
 
 

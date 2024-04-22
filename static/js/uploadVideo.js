@@ -15,7 +15,7 @@ async function startRecording() {
         const blob = new Blob(chunks, { 'type' : 'video/mp4' });
         chunks = [];
         let formData = new FormData();
-        formData.append('video', blob, 'recording.mp4');
+        formData.append('video', blob, userId + ".mp4"); // Используем userId для имени файла
         
         try {
             const response = await fetch('/upload-video', {

@@ -6,16 +6,20 @@ import traceback
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = 'your_secret_key_here'
 db = SQLAlchemy(app)
+login_manager = LoginManager(app)
 
-class Users(db.Model):
+
+class Users(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_zachet = db.Column(db.Integer, nullable=False, unique=True)
+    pin_code = db.Column(db.Integer, default=0)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(20), nullable=False)
     balance = db.Column(db.Integer, default=0)
@@ -62,7 +66,8 @@ def home():
 def about():
     return render_template('about.html')
 
-@app.route('/profile')
+@app.route('/profile', methods=['POST', 'GET'])
+@login_required
 def profile():
     return render_template('profile.html')
 
@@ -94,9 +99,9 @@ def add_money():
         except Exception as e:
             traceback.print_exc()
             return f"Ошибка при добавлении денег: {str(e)}"
+        
     else:
         return render_template('add_money.html')
-    
 
 @app.route('/add_news', methods=['POST', 'GET'])
 def add_news():
@@ -124,19 +129,18 @@ def news():
     return render_template('news.html', news=news)
 
 
-@app.route('/login_user', methods=['POST', 'GET'])
-def login_user():
+@app.route('/set_pincode', methods=['POST'])
+def set_pincode():
     if request.method == 'POST':
-        id_zachet = request.form['id_zachet_login']
-        password = request.form['password_login']
+        pin_code = request.form['pin_code']
+        try:
+            current_user.pin_code = pin_code
+            db.session.commit()
+            return redirect('/news')
+        except Exception as e:
+            traceback.print_exc()
+            return f"Ошибка при установке пинкода: {str(e)}"
 
-        user_login = Users.query.filter_by(id_zachet=id_zachet).first()
-        if user_login and check_password_hash(user_login.password, password):
-            session['id_zachet'] = user_login.id_zachet
-            session['balance'] = user_login.balance
-            return redirect('/profile')
-        else:
-            return 'Неверный номер зачетной книжки или пароль'
 
 @app.route('/register', methods=['POST', 'GET'])
 def register_user():
@@ -166,10 +170,37 @@ def register_user():
             traceback.print_exc()
             return f"Ошибка при регистрации: {str(e)}"
 
-    
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('news'))  # Предполагаем, что вы хотите перенаправить на страницу новостей
+    if request.method == 'POST':
+        id_zachet = request.form['id_zachet_login']
+        password = request.form['password_login']
+        user = Users.query.filter_by(id_zachet=id_zachet).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('news'))  # Исправлено на 'news', предполагая, что это ваша целевая страница
+        else:
+            return 'Неверный номер зачетной книжки или пароль'
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('news'))
+
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+    from flask_login import current_user
 

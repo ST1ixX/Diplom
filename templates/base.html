@@ -47,6 +47,7 @@
                         <span class="text">Профиль</span>                           
                     </a>
                 </li>
+                {% if not current_user.is_authenticated %}
                 <li class="list">
                     <a href="#" id="auth">
                         <span class="icon">
@@ -55,6 +56,16 @@
                         <span class="text">Регистрация/Авторизация</span>                           
                     </a>
                 </li>
+                {% else %}
+                <li class="list">
+                    <a href="/logout" id="auth">
+                        <span class="icon">
+                            <ion-icon name="log-out-outline"></ion-icon>
+                        </span>
+                        <span class="text">Выход</span>                           
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </nav>
@@ -67,7 +78,7 @@
             <button id="close-btn">
                 <img src="{{ url_for('static', filename='images/cross.png') }}" alt="Закрыть">
             </button>
-            <form method="post" id="login-form" action="{{ url_for('login_user') }}">
+            <form method="post" id="login-form">
                 <h2>Log in</h2>
                 <label for="id_zachet">Номер зачетной книжки
                     <input type="number" id="id_zachet" placeholder="Номер зачетной книжки" name="id_zachet_login" class="input__conteiner">
@@ -81,9 +92,7 @@
                 <input type="submit" value="Войти" name="sign" id="submit__btn">
                 <a href="#" id="foggot__password">Забыли пароль?</a>
                 <label for="register__btn">
-                    <a href="#" id="register__btn">
-                        <input type="submit" value="Зарегистрироваться" name="sign" id="reg_auth">
-                    </a>
+                    <input type="submit" value="Зарегистрироваться" name="sign" id="reg_auth">
                 </label>
             </form>
         </div>
@@ -93,7 +102,7 @@
             <button id="close-reg-btn">
                 <img src="{{ url_for('static', filename='images/cross.png') }}" alt="Закрыть">
             </button>
-            <form method="post" action="{{ url_for('register_user') }}" id="register-form">
+            <form method="post" id="register-form">
                 <h2>Register</h2>
                 <label for="email">Email
                     <input type="email" id="email_reg" placeholder="Почта" name="email_reg" class="input__conteiner">
