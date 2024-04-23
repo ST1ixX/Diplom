@@ -6,14 +6,25 @@ import traceback
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from dotenv import load_dotenv
 
 
+load_dotenv()
+s = URLSafeTimedSerializer('6fff877cdac3cef7ecd27e28f2630fb26df851dd35fdcc05913efd1003b2179a')
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = 'your_secret_key_here'
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
+app.config['MAIL_SERVER'] = 'smtp.yandex.ru'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'apppay2024@yandex.ru'
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+mail = Mail(app)
 
 
 class Users(UserMixin,db.Model):
@@ -23,6 +34,7 @@ class Users(UserMixin,db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(20), nullable=False)
     balance = db.Column(db.Integer, default=0)
+    confirmed = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'<Users {self.id}>'
@@ -142,6 +154,34 @@ def set_pincode():
             return f"Ошибка при установке пинкода: {str(e)}"
 
 
+# @app.route('/register', methods=['POST', 'GET'])
+# def register_user():
+#     if request.method == 'POST':
+#         email = request.form['email_reg']
+#         id_zachet = request.form['id_zachet_reg']
+#         password = request.form['password_reg']
+#         repeat_password = request.form['repeat_password_reg']
+
+#         existing_user = Users.query.filter_by(id_zachet=id_zachet).first()
+
+#         if existing_user:
+#             return 'Пользователь с таким номером зачетной книжки уже зарегистрирован'
+
+#         if password != repeat_password:
+#             return 'Пароли не совпадают'
+        
+#         hashed_password = generate_password_hash(password)
+#         users = Users(id_zachet=id_zachet, email=email, password=hashed_password)
+
+#         try:
+#             db.session.add(users)
+#             db.session.commit()
+#             db.session.close()
+#             return redirect('/news')
+#         except Exception as e:
+#             traceback.print_exc()
+#             return f"Ошибка при регистрации: {str(e)}"
+
 @app.route('/register', methods=['POST', 'GET'])
 def register_user():
     if request.method == 'POST':
@@ -150,25 +190,28 @@ def register_user():
         password = request.form['password_reg']
         repeat_password = request.form['repeat_password_reg']
 
-        existing_user = Users.query.filter_by(id_zachet=id_zachet).first()
-
-        if existing_user:
-            return 'Пользователь с таким номером зачетной книжки уже зарегистрирован'
-
         if password != repeat_password:
-            return 'Пароли не совпадают'
-        
+            return 'Пароли не совпадают', 400
+
+        existing_user = Users.query.filter_by(email=email).first()
+        if existing_user:
+            return 'Пользователь с таким email уже зарегистрирован', 409
+
         hashed_password = generate_password_hash(password)
-        users = Users(id_zachet=id_zachet, email=email, password=hashed_password)
+        new_user = Users(id_zachet=id_zachet, email=email, password=hashed_password, confirmed=False)
 
         try:
-            db.session.add(users)
+            db.session.add(new_user)
             db.session.commit()
-            db.session.close()
-            return redirect('/news')
+            send_confirmation(email)  # вызов функции отправки подтверждающего email
+            return 'Проверьте свою почту для подтверждения регистрации.', 200
         except Exception as e:
-            traceback.print_exc()
-            return f"Ошибка при регистрации: {str(e)}"
+            db.session.rollback()
+            return f'Ошибка при регистрации: {str(e)}', 500
+    else:
+        return render_template('index.html')
+
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -179,8 +222,11 @@ def login():
         password = request.form['password_login']
         user = Users.query.filter_by(id_zachet=id_zachet).first()
         if user and check_password_hash(user.password, password):
-            login_user(user)
-            return redirect('/')  
+            if not user.confirmed:
+                return 'Пожалуйста, подтвердите свой email'
+            remember_me = True if request.form.get('remember-me') else False
+            login_user(user, remember=remember_me)
+            return redirect('/')
         else:
             return 'Неверный номер зачетной книжки или пароль'
     return render_template('profile.html')
@@ -197,10 +243,34 @@ def logout():
 def load_user(user_id):
     return Users.query.get(int(user_id))
 
+
+def send_confirmation(email):
+    token = s.dumps(email, salt='email-confirm')
+    confirm_url = url_for('confirm_email', token=token, _external=True)
+    msg = Message('Confirm Your Email', sender='apppay2024@yandex.ru', recipients=[email])
+    msg.body = f'Please click on the following link to confirm your email: {confirm_url}'
+    mail.send(msg)
+
+
+@app.route('/confirm_email/<token>')
+def confirm_email(token):
+    try:
+        email = s.loads(token, salt='email-confirm', max_age=3600)
+        user = Users.query.filter_by(email=email).first()
+        if user:
+            user.confirmed = True
+            db.session.commit()
+            return 'Ваш email подтвержден!', 200
+        else:
+            return 'Ошибка: пользователь не найден.', 404
+    except SignatureExpired:
+        return 'Ссылка для подтверждения истекла.', 400
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
 
-    from flask_login import current_user
+    
 

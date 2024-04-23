@@ -87,12 +87,12 @@
                     <input type="password" id="password_login" placeholder="Пароль" name="password_login" class="input__conteiner">
                 </label>
                 <label for="remember-me">Запомнить меня
-                    <input type="checkbox" id="remember-me">
+                    <input type="checkbox" id="remember-me" name="remember-me">
                 </label>
                 <input type="submit" value="Войти" name="sign" id="submit__btn">
                 <a href="#" id="foggot__password">Забыли пароль?</a>
                 <label for="register__btn">
-                    <input type="submit" value="Зарегистрироваться" name="sign" id="reg_auth">
+                    <button type="button" id="register__btn">Зарегистрироваться</button>
                 </label>
             </form>
         </div>
@@ -102,7 +102,7 @@
             <button id="close-reg-btn">
                 <img src="{{ url_for('static', filename='images/cross.png') }}" alt="Закрыть">
             </button>
-            <form method="post" id="register-form">
+            <form action="/register" method="post" id="register-form">
                 <h2>Register</h2>
                 <label for="email">Email
                     <input type="email" id="email_reg" placeholder="Почта" name="email_reg" class="input__conteiner">
