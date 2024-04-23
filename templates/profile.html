@@ -16,11 +16,14 @@
         </div>
     </div>
     <button id="start-recording">Начать запись</button>
+    <button id="capture-snapshots">Захватить снимки</button>
+
     <form method="POST" id="set-pincode">
         <input type="text" name="pin_code" placeholder="Введите пинкод">
         <button type="submit">Назначить пинкод</button>
     </form>
     <script src="{{ url_for('static', filename='js/uploadVideo.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/captureAndSaveSnapshots.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
     <script>
         var userId = "{{ current_user.id_zachet }}"; 

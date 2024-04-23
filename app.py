@@ -115,6 +115,7 @@ def add_money():
     else:
         return render_template('add_money.html')
 
+
 @app.route('/add_news', methods=['POST', 'GET'])
 def add_news():
     if request.method == 'POST':
@@ -153,34 +154,6 @@ def set_pincode():
             traceback.print_exc()
             return f"Ошибка при установке пинкода: {str(e)}"
 
-
-# @app.route('/register', methods=['POST', 'GET'])
-# def register_user():
-#     if request.method == 'POST':
-#         email = request.form['email_reg']
-#         id_zachet = request.form['id_zachet_reg']
-#         password = request.form['password_reg']
-#         repeat_password = request.form['repeat_password_reg']
-
-#         existing_user = Users.query.filter_by(id_zachet=id_zachet).first()
-
-#         if existing_user:
-#             return 'Пользователь с таким номером зачетной книжки уже зарегистрирован'
-
-#         if password != repeat_password:
-#             return 'Пароли не совпадают'
-        
-#         hashed_password = generate_password_hash(password)
-#         users = Users(id_zachet=id_zachet, email=email, password=hashed_password)
-
-#         try:
-#             db.session.add(users)
-#             db.session.commit()
-#             db.session.close()
-#             return redirect('/news')
-#         except Exception as e:
-#             traceback.print_exc()
-#             return f"Ошибка при регистрации: {str(e)}"
 
 @app.route('/register', methods=['POST', 'GET'])
 def register_user():
@@ -265,6 +238,22 @@ def confirm_email(token):
             return 'Ошибка: пользователь не найден.', 404
     except SignatureExpired:
         return 'Ссылка для подтверждения истекла.', 400
+
+@app.route('/create-folder', methods=['POST'])
+def create_folder():
+    folder_name = request.args.get('folderName')
+    os.makedirs(folder_name, exist_ok=True)
+    return 'Folder created', 200
+
+@app.route('/save-snapshot', methods=['POST'])
+def save_snapshot():
+    folder_name = request.args.get('folderName')
+    snapshot = request.files['snapshot']
+    if snapshot:
+        filename = secure_filename(snapshot.filename)
+        snapshot.save(os.path.join(folder_name, filename))
+        return 'Snapshot saved', 200
+    return 'Error saving snapshot', 400
 
 
 if __name__ == '__main__':

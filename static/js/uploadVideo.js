@@ -15,7 +15,7 @@ async function startRecording() {
         const blob = new Blob(chunks, { 'type' : 'video/mp4' });
         chunks = [];
         let formData = new FormData();
-        formData.append('video', blob, userId + ".mp4"); // Используем userId для имени файла
+        formData.append('video', blob, userId + ".mp4"); 
         
         try {
             const response = await fetch('/upload-video', {
@@ -44,5 +44,5 @@ startRecordingButton.addEventListener('click', () => {
         stream.getTracks().forEach(track => track.stop());
         startRecordingButton.removeAttribute("disabled");
         console.log("Запись остановлена");
-    }, 5000); // Запись останавливается через 5 секунд
+    }, 20000); 
 });
