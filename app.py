@@ -77,7 +77,7 @@ class TemporaryUser(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
     pin_code = db.Column(db.Integer, default=0)
-    token = db.Column(db.String(128), unique=True, nullable=False)  # Токен для подтверждения
+    token = db.Column(db.String(128), unique=True, nullable=False)  
 
     def __repr__(self):
         return f'<TemporaryUser {self.email}>'
@@ -87,8 +87,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_admin:
-            # Можно также использовать redirect для перенаправления на главную страницу или страницу входа
-            abort(403)  # Возвращает ошибку 403 Forbidden
+            abort(403)  
         return f(*args, **kwargs)
     return decorated_function
 
@@ -261,8 +260,8 @@ def load_user(user_id):
 
 def send_confirmation(email, token):
     confirm_url = url_for('confirm_email', token=token, _external=True)
-    msg = Message('Confirm Your Email', sender='apppay2024@yandex.ru', recipients=[email])
-    msg.body = f'Please click on the following link to confirm your email: {confirm_url}'
+    msg = Message('Подтверждение учетной записи', sender='apppay2024@yandex.ru', recipients=[email])
+    msg.body = f'Для подтверждения учетной записи и завершения регистрации перейдите по ссылке: {confirm_url}'
     mail.send(msg)
 
 
@@ -316,9 +315,48 @@ def get_user_ids():
     user_ids = [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
     return jsonify(user_ids)
 
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email_forgot'] 
+        user = Users.query.filter_by(email=email).first()
+        if user:
+            token = s.dumps(email, salt='recover-password')
+            recover_url = url_for('reset_password', token=token, _external=True)
+            msg = Message('Восстановление пароля', sender='apppay2024@yandex.ru', recipients=[email])
+            msg.body = f'Для сброса пароля перейдите по ссылке: {recover_url}'
+            mail.send(msg)
+            flash('Инструкции по восстановлению пароля отправлены на вашу почту.', 'info')
+            return redirect(url_for('forgot_password'))
+        else:
+            flash('Пользователь с таким email не найден.', 'error')
+    return render_template('forgot_password.html')
+
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = s.loads(token, salt='recover-password', max_age=3600)
+    except SignatureExpired:
+        return 'Ссылка для восстановления пароля истекла.', 400
+    except:
+        return 'Неверный токен.', 400
+
+    if request.method == 'POST':
+        new_password = request.form['password']
+        user = Users.query.filter_by(email=email).first()
+        user.password = generate_password_hash(new_password)
+        db.session.commit()
+        flash('Ваш пароль был успешно обновлён.', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_password.html')
+
+
+
 if __name__ == '__main__':
     with app.app_context():
-        db.drop_all()
         db.create_all()
     app.run(debug=True)
 
