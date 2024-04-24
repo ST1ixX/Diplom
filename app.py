@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, abort, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
 import traceback
@@ -10,6 +10,7 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv
+from functools import wraps
 
 
 load_dotenv()
@@ -35,6 +36,7 @@ class Users(UserMixin,db.Model):
     password = db.Column(db.String(20), nullable=False)
     balance = db.Column(db.Integer, default=0)
     confirmed = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'<Users {self.id}>'
@@ -69,6 +71,27 @@ class News(db.Model):
     def __repr__(self):
         return f'<News {self.id}>'
 
+class TemporaryUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_zachet = db.Column(db.Integer, unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+    pin_code = db.Column(db.Integer, default=0)
+    token = db.Column(db.String(128), unique=True, nullable=False)  # Токен для подтверждения
+
+    def __repr__(self):
+        return f'<TemporaryUser {self.email}>'
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            # Можно также использовать redirect для перенаправления на главную страницу или страницу входа
+            abort(403)  # Возвращает ошибку 403 Forbidden
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 @app.route('/')
 def home():
@@ -98,6 +121,7 @@ def payment():
     return render_template('payment.html')
 
 @app.route('/add_money', methods=['POST', 'GET'])
+@admin_required
 def add_money():
     if request.method == 'POST':
         id_users = request.form['id_users']
@@ -117,6 +141,7 @@ def add_money():
 
 
 @app.route('/add_news', methods=['POST', 'GET'])
+@admin_required
 def add_news():
     if request.method == 'POST':
         title = request.form['title']
@@ -142,17 +167,27 @@ def news():
     return render_template('news.html', news=news)
 
 
-@app.route('/set_pincode', methods=['POST'])
+from flask import flash, redirect, url_for
+
+@app.route('/set_pincode', methods=['POST', 'GET'])
 def set_pincode():
     if request.method == 'POST':
         pin_code = request.form['pin_code']
-        try:
-            current_user.pin_code = pin_code
-            db.session.commit()
-            return redirect('/news')
-        except Exception as e:
-            traceback.print_exc()
-            return f"Ошибка при установке пинкода: {str(e)}"
+        password = request.form['password']  # исправлено опечатка с 'pasword' на 'password'
+        user = Users.query.filter_by(id_zachet=current_user.id_zachet).first()
+        if user and check_password_hash(user.password, password):
+            try:
+                user.pin_code = int(pin_code)
+                db.session.commit()
+                flash("Пин-код успешно изменён.", 'success')  # Flash сообщение об успехе
+                return redirect(url_for('profile'))
+            except Exception as e:
+                traceback.print_exc()
+                flash(f"Ошибка при установке пинкода: {str(e)}", 'error')
+                return redirect(url_for('profile'))
+        else:
+            flash("Ошибка при установке пинкода", 'error')
+            return redirect(url_for('profile'))
 
 
 @app.route('/register', methods=['POST', 'GET'])
@@ -162,38 +197,45 @@ def register_user():
         id_zachet = request.form['id_zachet_reg']
         password = request.form['password_reg']
         repeat_password = request.form['repeat_password_reg']
+        pin_code = request.form['pin_code']
 
         if password != repeat_password:
-            return 'Пароли не совпадают', 400
+            flash('Пароли не совпадают', 'warning')
+            return redirect(url_for('register_user'))
 
-        existing_user = Users.query.filter_by(email=email).first()
-        if existing_user:
-            return 'Пользователь с таким email уже зарегистрирован', 409
+        if TemporaryUser.query.filter((TemporaryUser.email == email) | (TemporaryUser.id_zachet == id_zachet)).first():
+            flash('Пользователь с таким email или номером уже в процессе регистрации', 'error')
+            return redirect(url_for('register_user'))
 
         hashed_password = generate_password_hash(password)
-        new_user = Users(id_zachet=id_zachet, email=email, password=hashed_password, confirmed=False)
+        token = s.dumps(email, salt='email-confirm')
+        new_temp_user = TemporaryUser(id_zachet=id_zachet, email=email, password=hashed_password, pin_code=pin_code, token=token)
+        db.session.add(new_temp_user)
+        db.session.commit()
 
-        try:
-            db.session.add(new_user)
-            db.session.commit()
-            send_confirmation(email)  # вызов функции отправки подтверждающего email
-            return 'Проверьте свою почту для подтверждения регистрации.', 200
-        except Exception as e:
-            db.session.rollback()
-            return f'Ошибка при регистрации: {str(e)}', 500
+        send_confirmation(email, token)  # правильный вызов функции
+        flash("Подтвердите учетную запись, перейдя по ссылке, отправленной вам на почту", 'warning')
+        return render_template('index.html')
     else:
         return render_template('index.html')
+
 
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect('/')  
+        return redirect('/')
     if request.method == 'POST':
-        id_zachet = request.form['id_zachet_login']
+        login_input = request.form['id_zachet_login']
         password = request.form['password_login']
-        user = Users.query.filter_by(id_zachet=id_zachet).first()
+
+        user = None
+        if '@' in login_input:
+            user = Users.query.filter_by(email=login_input).first()
+        else:
+            user = Users.query.filter_by(id_zachet=login_input).first()
+
         if user and check_password_hash(user.password, password):
             if not user.confirmed:
                 return 'Пожалуйста, подтвердите свой email'
@@ -217,27 +259,26 @@ def load_user(user_id):
     return Users.query.get(int(user_id))
 
 
-def send_confirmation(email):
-    token = s.dumps(email, salt='email-confirm')
+def send_confirmation(email, token):
     confirm_url = url_for('confirm_email', token=token, _external=True)
     msg = Message('Confirm Your Email', sender='apppay2024@yandex.ru', recipients=[email])
     msg.body = f'Please click on the following link to confirm your email: {confirm_url}'
     mail.send(msg)
 
 
+
 @app.route('/confirm_email/<token>')
 def confirm_email(token):
-    try:
-        email = s.loads(token, salt='email-confirm', max_age=3600)
-        user = Users.query.filter_by(email=email).first()
-        if user:
-            user.confirmed = True
-            db.session.commit()
-            return 'Ваш email подтвержден!', 200
-        else:
-            return 'Ошибка: пользователь не найден.', 404
-    except SignatureExpired:
-        return 'Ссылка для подтверждения истекла.', 400
+    temp_user = TemporaryUser.query.filter_by(token=token).first()
+    if not temp_user:
+        return 'Ошибка: неверный токен или пользователь уже подтвержден.', 404
+
+    new_user = Users(id_zachet=temp_user.id_zachet, email=temp_user.email, password=temp_user.password, pin_code=temp_user.pin_code, confirmed=True)
+    db.session.add(new_user)
+    db.session.delete(temp_user)
+    db.session.commit()
+    return 'Ваш email подтвержден!', 200
+
 
 @app.route('/create-folder', methods=['POST'])
 def create_folder():
@@ -255,9 +296,29 @@ def save_snapshot():
         return 'Snapshot saved', 200
     return 'Error saving snapshot', 400
 
+@app.route('/face-login', methods = ['GET', 'POST'])
+def face_login():
+    return render_template('face_login.html')
+
+
+@app.route('/models/<path:filename>')
+def models(filename):
+    return send_from_directory('models', filename)
+
+@app.route('/snapshots/<path:filename>')
+def serve_snapshots(filename):
+    return send_from_directory('snapshots', filename)
+
+
+@app.route('/get-user-ids')
+def get_user_ids():
+    directory = 'snapshots'
+    user_ids = [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+    return jsonify(user_ids)
 
 if __name__ == '__main__':
     with app.app_context():
+        db.drop_all()
         db.create_all()
     app.run(debug=True)
 

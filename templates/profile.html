@@ -3,6 +3,13 @@
 {% block content %}
     <h1>Профиль</h1>
     <div class="wrapper">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <div class="user-info">
             <div class="balance">
                 <h2>Ваш баланс: {{ current_user.balance }}</h2>
@@ -14,14 +21,15 @@
                 <h2>Ваш пинкод: {{ current_user.pin_code }}</h2>
             </div>
         </div>
+        <button id="start-recording">Начать запись</button>
+        <button id="capture-snapshots">Захватить снимки</button>
+        <form method="post" action="/set_pincode" class="profile_form">
+            <input type="number" name="password" placeholder="Введите пароль для смены пинкода">
+            <input type="number" name="pin_code" placeholder="Введите пинкод">
+            <button type="submit" class="button_add_money">Назначить пин</button>
+        </form>
+        
     </div>
-    <button id="start-recording">Начать запись</button>
-    <button id="capture-snapshots">Захватить снимки</button>
-
-    <form method="POST" id="set-pincode">
-        <input type="text" name="pin_code" placeholder="Введите пинкод">
-        <button type="submit">Назначить пинкод</button>
-    </form>
     <script src="{{ url_for('static', filename='js/uploadVideo.js') }}"></script>
     <script src="{{ url_for('static', filename='js/captureAndSaveSnapshots.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
