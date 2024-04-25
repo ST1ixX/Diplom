@@ -172,7 +172,7 @@ from flask import flash, redirect, url_for
 def set_pincode():
     if request.method == 'POST':
         pin_code = request.form['pin_code']
-        password = request.form['password']  # исправлено опечатка с 'pasword' на 'password'
+        password = request.form['password'] 
         user = Users.query.filter_by(id_zachet=current_user.id_zachet).first()
         if user and check_password_hash(user.password, password):
             try:
@@ -353,6 +353,32 @@ def reset_password(token):
         return redirect(url_for('login'))
     return render_template('reset_password.html')
 
+
+@app.route('/pay', methods=['POST', 'GET'])
+def pay():
+    user_id = request.form['user_id']
+    amount = request.form['amount_pay']
+    pin_code = request.form['pin_code']
+
+    if request.method == 'POST':
+        user = Users.query.filter_by(id_zachet=user_id).first()
+        if user and str(user.pin_code) == str(pin_code):
+            if user.balance >= int(amount): 
+                user.balance -= int(amount)
+                db.session.commit()
+                flash('Оплата прошла успешно', 'success')
+                return redirect(url_for('face_login'))
+            else:
+                flash('Недостаточно средств', 'error')
+                return redirect(url_for('face_login'))
+        else:
+            if not user:
+                flash('Пользователь не найден', 'error')
+                return redirect(url_for('face_login'))
+            if user and str(user.pin_code) != str(pin_code):
+                flash('Неправильный пин-код', 'error')
+                return redirect(url_for('face_login'))
+                
 
 
 if __name__ == '__main__':

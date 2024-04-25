@@ -1,10 +1,3 @@
-<!-- {% extends 'base.html'%}
-
-{% block content %}
-
-
-{% endblock %} -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,11 +5,167 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Face detection on the browser using javascript !</title>
-  <script defer src="static/js/face-api.min.js"></script>
-  <script defer src="static/js/faceRecognition.js"></script>
-  <link rel="stylesheet" href="static/css/faceRecognition.css">
+  <script defer src="/static/js/face-api.min.js"></script>
+  <script defer src="/static/js/faceRecognition.js"></script>
+  <link rel="stylesheet" href="/static/css/faceRecognition.css">
+  <link rel="shortcut icon" href="https://icons8.ru/icon/ckrjM2xjKegD/cash" type="image/x-icon">
 </head>
 <body>
-  <video id="video" width="600" height="450" autoplay>
+    <nav class="header">
+      <div class="header__menu">
+          <ul>
+              {% if not current_user.is_admin %}
+              <li class="list">
+                  <a href="/news">
+                      <span class="icon">
+                      <ion-icon name="newspaper-outline"></ion-icon></span>
+                      <span class="text">Новости</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="/about">
+                      <span class="icon">
+                      <ion-icon name="help-outline"></ion-icon></span>
+                      <span class="text">О нас</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="#">
+                      <span class="icon">
+                      <ion-icon name="hammer-outline"></ion-icon></span>
+                      <span class="text">Услуги</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="#">
+                      <span class="icon">
+                      <ion-icon name="card-outline"></ion-icon></span>
+                      <span class="text">Мои покупки</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="/profile">
+                      <span class="icon">
+                          <ion-icon name="person-outline"></ion-icon>
+                      </span>
+                      <span class="text">Профиль</span>                           
+                  </a>
+              </li>
+              {% if not current_user.is_authenticated %}
+              <li class="list">
+                  <a href="#" id="auth">
+                      <span class="icon">
+                          <ion-icon name="person-add-outline"></ion-icon>
+                      </span>
+                      <span class="text">Регистрация/Авторизация</span>                           
+                  </a>
+              </li>
+              {% else %}
+              <li class="list">
+                  <a href="/logout" id="log-out">
+                      <span class="icon">
+                          <ion-icon name="log-out-outline"></ion-icon>
+                      </span>
+                      <span class="text">Выход</span>                           
+                  </a>
+              </li>
+              {% endif %}
+              {% else %}
+              <li class="list">
+                  <a href="/add_news">
+                      <span class="icon">
+                          <ion-icon name="paper-plane-outline"></ion-icon></span>
+                      <span class="text">Добавь новость</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="/add_money">
+                      <span class="icon">
+                          <ion-icon name="cash-outline"></ion-icon></span>
+                      <span class="text">Начислить деньги</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="/news">
+                      <span class="icon">
+                      <ion-icon name="newspaper-outline"></ion-icon></span>
+                      <span class="text">Новости</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="/about">
+                      <span class="icon">
+                      <ion-icon name="help-outline"></ion-icon></span>
+                      <span class="text">О нас</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="#">
+                      <span class="icon">
+                      <ion-icon name="hammer-outline"></ion-icon></span>
+                      <span class="text">Услуги</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="#">
+                      <span class="icon">
+                      <ion-icon name="card-outline"></ion-icon></span>
+                      <span class="text">Мои покупки</span>
+                  </a>
+              </li>
+              <li class="list">
+                  <a href="/profile">
+                      <span class="icon">
+                          <ion-icon name="person-outline"></ion-icon>
+                      </span>
+                      <span class="text">Профиль</span>                           
+                  </a>
+              </li>
+              {% if not current_user.is_authenticated %}
+              <li class="list">
+                  <a href="#" id="auth">
+                      <span class="icon">
+                          <ion-icon name="person-add-outline"></ion-icon>
+                      </span>
+                      <span class="text">Регистрация/Авторизация</span>                           
+                  </a>
+              </li>
+              {% else %}
+              <li class="list">
+                  <a href="/logout" id="log-out">
+                      <span class="icon">
+                          <ion-icon name="log-out-outline"></ion-icon>
+                      </span>
+                      <span class="text">Выход</span>                           
+                  </a>
+              </li>
+              {% endif %}
+              {% endif %}
+          </ul>
+      </div>
+  </nav>
+  <div class="video-container">
+    <video id="video" width="600" height="450" autoplay></video>
+    <canvas id="canvas"></canvas>
+  </div>
+  <div class="pay_amount">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <form method="post" action="/pay" class="payment-form"> 
+      <input type="hidden" name="user_id" value=""> 
+      <input type="text" name="amount_pay" placeholder="Введите сумму">
+      <input type="text" name="pin_code" placeholder="Введите пин код">
+      <button type="submit">Оплатить</button>
+    </form>
+  </div>
+  
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 </body>
 </html>
