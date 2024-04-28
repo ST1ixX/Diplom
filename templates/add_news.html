@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 
+{% block title %} Добавить новость {% endblock %}
+
 {% block content %}
-    <h1>Add News</h1>
+    <h1>Добавить новость</h1>
     <form method="post">
-        <input type="text" name="title" placeholder="Title">
-        <textarea name="intro_text" placeholder="intro_text"></textarea>
-        <textarea name="full_text" placeholder="full_text"></textarea>
-        <button type="submit">Add News</button>
+        <input type="text" name="title" placeholder="Заголовок">
+        <textarea name="intro_text" placeholder="Описание" class="input__conteiner"></textarea>
+        <textarea name="full_text" placeholder="Полный текст" class="input__conteiner"></textarea>
+        <button type="submit"> Опубликовать </button>
     </form>
 {% endblock %}
 

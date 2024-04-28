@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 
+{% block title %} Новости {% endblock %}
+
 {% block content %}
-    <h1>News</h1>
+    <h1>Новости</h1>
     <div class="news_container">
         {% for news in news %}
             <div class="news">

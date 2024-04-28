@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 
+{% block title %} Начислить деньги {% endblock %}
+
 {% block content %}
 <div class="wrapper">
-    <h1>Add Money</h1>
+    <h1>Добавить деньги</h1>
     <form method="post" class="form_add_money">
-        <input type="number" name="id_users" placeholder="id_users" required class="input_money">
-        <input type="number" name="amount" placeholder="Amount" required class="input_money">
-        <button type="submit" class="button_add_money">Add Money</button>
+        <input type="number" name="id_users" placeholder="id пользователя" required class="input_money">
+        <input type="number" name="amount" placeholder="сумма" required class="input_money">
+        <button type="submit" class="button_add_money">Начислить</button>
     </form>
 </div>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_money.css') }}">

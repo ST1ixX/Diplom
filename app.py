@@ -135,10 +135,6 @@ def upload_video():
     return 'Ошибка при загрузке видео', 400
 
 
-@app.route('/payment')
-def payment():
-    return render_template('payment.html')
-
 @app.route('/add_money', methods=['POST', 'GET'])
 @admin_required
 def add_money():
@@ -148,10 +144,24 @@ def add_money():
         
         try:
             user = Users.query.filter_by(id_zachet=id_users).first()
-            user.balance += int(amount)
-            db.session.commit()
-            return redirect('/profile')
+            if user:
+
+                user.balance += int(amount)
+
+                new_transaction = Transaction(
+                    id_zachet=user.id_zachet,
+                    amount=int(amount),
+                    date=datetime.utcnow(),
+                    transaction_type='deposit',
+                    payment_point_id=None  
+                )
+                db.session.add(new_transaction)
+                db.session.commit()
+                return redirect('/profile')
+            else:
+                return "Пользователь не найден"
         except Exception as e:
+            db.session.rollback()
             traceback.print_exc()
             return f"Ошибка при добавлении денег: {str(e)}"
         
@@ -365,7 +375,6 @@ def add_payment():
     if request.method == 'POST':
         name = request.form['name']
         location = request.form['location']
-
         
         payment = PaymentPoint(name=name, location=location, owner_id=current_user.id_zachet)
 
@@ -433,16 +442,25 @@ def pay():
         else:
             flash('Недостаточно средств или неверный пин-код', 'error')
 
-    return render_template('payment.html')
+    return redirect(url_for('face_login'))
 
 
 
-@app.route('/transactions', methods=['GET', 'POST'])  
+@app.route('/transactions')
 @login_required
 def transactions():
-    transactions = Transaction.query.filter_by(id_zachet=current_user.id_zachet).all()
+    transactions = Transaction.query.join(Users).filter(Users.id_zachet == current_user.id_zachet).all()
     return render_template('transactions.html', transactions=transactions)
 
+@app.route('/all_transactions')
+@login_required
+def all_transactions():
+    transactions = Transaction.query \
+    .join(PaymentPoint, Transaction.payment_point_id == PaymentPoint.id) \
+    .filter(PaymentPoint.owner_id == current_user.id_zachet) \
+    .all()
+
+    return render_template('all_transactions.html', transactions=transactions)
 
 if __name__ == '__main__':
     with app.app_context():
