@@ -28,7 +28,7 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 mail = Mail(app)
 
 
-class Users(UserMixin,db.Model):
+class Users(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_zachet = db.Column(db.Integer, nullable=False, unique=True)
     pin_code = db.Column(db.Integer, default=0)
@@ -37,29 +37,37 @@ class Users(UserMixin,db.Model):
     balance = db.Column(db.Integer, default=0)
     confirmed = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
+    is_store = db.Column(db.Boolean, default=False) 
 
     def __repr__(self):
         return f'<Users {self.id}>'
+
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_zachet = db.Column(db.Integer, db.ForeignKey('users.id_zachet'), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
-    place = db.Column(db.String(100), nullable=False)
+    payment_point_id = db.Column(db.Integer, db.ForeignKey('payment_point.id'), nullable=False)
     amount = db.Column(db.Integer, nullable=False)
-
+    
     user = db.relationship('Users', backref=db.backref('transactions', lazy=True))
+    payment_point = db.relationship('PaymentPoint', backref=db.backref('transactions', lazy=True))
 
     def __repr__(self):
         return f'<Transaction {self.id}>'
 
+
 class PaymentPoint(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id_zachet'), nullable=False)  # Ссылка на владельца-магазина
     name = db.Column(db.String(100), nullable=False)
     location = db.Column(db.String(100), nullable=False)
 
+    owner = db.relationship('Users', backref=db.backref('payment_points', lazy=True))
+
     def __repr__(self):
         return f'<PaymentPoint {self.id}>'
+
 
 class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -92,6 +100,15 @@ def admin_required(f):
     return decorated_function
 
 
+def store_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_store:
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -103,7 +120,10 @@ def about():
 @app.route('/profile', methods=['POST', 'GET'])
 @login_required
 def profile():
-    return render_template('profile.html')
+    store_points = None
+    if current_user.is_store:
+        store_points = current_user.payment_points  
+    return render_template('profile.html', store_points=store_points)
 
 @app.route('/upload-video', methods=['POST'])
 def upload_video():
@@ -166,7 +186,11 @@ def news():
     return render_template('news.html', news=news)
 
 
-from flask import flash, redirect, url_for
+@app.route('/news/<int:news_id>')
+def news_detail(news_id):
+    news = News.query.get(news_id)
+    return render_template('news_detail.html', news=news)
+
 
 @app.route('/set_pincode', methods=['POST', 'GET'])
 def set_pincode():
@@ -212,7 +236,7 @@ def register_user():
         db.session.add(new_temp_user)
         db.session.commit()
 
-        send_confirmation(email, token)  # правильный вызов функции
+        send_confirmation(email, token)
         flash("Подтвердите учетную запись, перейдя по ссылке, отправленной вам на почту", 'warning')
         return render_template('index.html')
     else:
@@ -295,6 +319,7 @@ def save_snapshot():
         return 'Snapshot saved', 200
     return 'Error saving snapshot', 400
 
+
 @app.route('/face-login', methods = ['GET', 'POST'])
 def face_login():
     return render_template('face_login.html')
@@ -334,6 +359,31 @@ def forgot_password():
     return render_template('forgot_password.html')
 
 
+@app.route('/add_payment', methods=['POST', 'GET'])
+@store_required  
+def add_payment():
+    if request.method == 'POST':
+        name = request.form['name']
+        location = request.form['location']
+
+        
+        payment = PaymentPoint(name=name, location=location, owner_id=current_user.id_zachet)
+
+        try:
+            db.session.add(payment)
+            db.session.commit()
+            flash("Новый пункт платежа успешно добавлен.", 'success')
+            return redirect('/')
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Ошибка при добавлении магазина: {str(e)}", 'error')
+            return render_template('add_payment.html')
+    else:
+        return render_template('add_payment.html')
+
+
+
+
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -355,30 +405,43 @@ def reset_password(token):
 
 
 @app.route('/pay', methods=['POST', 'GET'])
+@store_required
 def pay():
-    user_id = request.form['user_id']
-    amount = request.form['amount_pay']
-    pin_code = request.form['pin_code']
-
     if request.method == 'POST':
-        user = Users.query.filter_by(id_zachet=user_id).first()
-        if user and str(user.pin_code) == str(pin_code):
-            if user.balance >= int(amount): 
-                user.balance -= int(amount)
-                db.session.commit()
-                flash('Оплата прошла успешно', 'success')
-                return redirect(url_for('face_login'))
-            else:
-                flash('Недостаточно средств', 'error')
-                return redirect(url_for('face_login'))
+        amount = request.form['amount_pay']
+        pin_code = request.form['pin_code']
+
+        if current_user.is_store:
+            payment_point = PaymentPoint.query.filter_by(owner_id=current_user.id_zachet).first()
+            if not payment_point:
+                flash('У вашего магазина нет зарегистрированных точек оплаты.', 'error')
+                return redirect(url_for('profile'))
+
+            payment_point_id = payment_point.id
+
+        if str(current_user.pin_code) == str(pin_code) and current_user.balance >= int(amount):
+            current_user.balance -= int(amount)
+            transaction = Transaction(
+                id_zachet=current_user.id_zachet,
+                amount=amount,
+                payment_point_id=payment_point_id
+            )
+            db.session.add(transaction)
+            db.session.commit()
+            flash('Оплата прошла успешно', 'success')
+            return redirect(url_for('face_login'))
         else:
-            if not user:
-                flash('Пользователь не найден', 'error')
-                return redirect(url_for('face_login'))
-            if user and str(user.pin_code) != str(pin_code):
-                flash('Неправильный пин-код', 'error')
-                return redirect(url_for('face_login'))
-                
+            flash('Недостаточно средств или неверный пин-код', 'error')
+
+    return render_template('payment.html')
+
+
+
+@app.route('/transactions', methods=['GET', 'POST'])  
+@login_required
+def transactions():
+    transactions = Transaction.query.filter_by(id_zachet=current_user.id_zachet).all()
+    return render_template('transactions.html', transactions=transactions)
 
 
 if __name__ == '__main__':

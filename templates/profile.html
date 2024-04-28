@@ -20,6 +20,18 @@
             <div class="pincode">
                 <h2>Ваш пинкод: {{ current_user.pin_code }}</h2>
             </div>
+            {% if current_user.is_store %}
+            <div class="store">
+                <h2>Ваш магазин:</h2>
+                {% if store_points %}
+                    <ul>
+                        {% for point in store_points %}
+                            <li>{{ point.name }} - {{ point.location }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
         <button id="start-recording">Начать запись</button>
         <button id="capture-snapshots">Захватить снимки</button>
@@ -28,7 +40,6 @@
             <input type="number" name="pin_code" placeholder="Введите пинкод">
             <button type="submit" class="button_add_money">Назначить пин</button>
         </form>
-        
     </div>
     <script src="{{ url_for('static', filename='js/uploadVideo.js') }}"></script>
     <script src="{{ url_for('static', filename='js/captureAndSaveSnapshots.js') }}"></script>
@@ -37,5 +48,3 @@
         var userId = "{{ current_user.id_zachet }}"; 
     </script>
 {% endblock %}
-
-

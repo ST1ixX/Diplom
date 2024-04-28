@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Transactions</h1>
+    <div class="transactions_container">
+        {% for transaction in transactions %}
+            <div class="transaction">
+                <p>{{ transaction.id_zachet }}</p>
+                <p>{{ transaction.amount  }}</p>
+                <p>{{ transaction.date  }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
