@@ -1,4 +1,6 @@
 from datetime import datetime
+import yookassa
+from yookassa import Configuration, Payment
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, abort, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -11,6 +13,7 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from functools import wraps
+import uuid
 
 
 load_dotenv()
@@ -26,6 +29,8 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'apppay2024@yandex.ru'
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 mail = Mail(app)
+Configuration.account_id = os.getenv('accountId')
+Configuration.secret_key = os.getenv('secret_key')
 
 
 class Users(UserMixin, db.Model):
@@ -113,9 +118,11 @@ def store_required(f):
 def home():
     return render_template('index.html')
 
+
 @app.route('/about')
 def about():
     return render_template('about.html')
+
 
 @app.route('/profile', methods=['POST', 'GET'])
 @login_required
@@ -124,6 +131,7 @@ def profile():
     if current_user.is_store:
         store_points = current_user.payment_points  
     return render_template('profile.html', store_points=store_points)
+
 
 @app.route('/upload-video', methods=['POST'])
 def upload_video():
@@ -147,15 +155,6 @@ def add_money():
             if user:
 
                 user.balance += int(amount)
-
-                new_transaction = Transaction(
-                    id_zachet=user.id_zachet,
-                    amount=int(amount),
-                    date=datetime.utcnow(),
-                    transaction_type='deposit',
-                    payment_point_id=None  
-                )
-                db.session.add(new_transaction)
                 db.session.commit()
                 return redirect('/profile')
             else:
@@ -253,8 +252,6 @@ def register_user():
         return render_template('index.html')
 
 
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -278,6 +275,7 @@ def login():
         else:
             return 'Неверный номер зачетной книжки или пароль'
     return render_template('profile.html')
+
 
 @app.route('/logout')
 @login_required
@@ -392,8 +390,6 @@ def add_payment():
 
 
 
-
-
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
@@ -445,12 +441,12 @@ def pay():
     return redirect(url_for('face_login'))
 
 
-
 @app.route('/transactions')
 @login_required
 def transactions():
     transactions = Transaction.query.join(Users).filter(Users.id_zachet == current_user.id_zachet).all()
     return render_template('transactions.html', transactions=transactions)
+
 
 @app.route('/all_transactions')
 @login_required
@@ -461,6 +457,71 @@ def all_transactions():
     .all()
 
     return render_template('all_transactions.html', transactions=transactions)
+
+
+@app.route('/create_payment', methods=['POST', 'GET'])
+@login_required
+def create_payment():
+    amount = request.form['amount_pay']
+    pin_code = request.form['pin_code']
+    user_id = request.form['user_id']
+
+    if request.method == 'POST':
+        user = Users.query.filter_by(id_zachet=user_id).first()
+        print('*' * 100)
+        print(user_id, user.id_zachet)
+        print(user.pin_code, pin_code)
+        print(user.balance, amount)
+        print('*' * 100)
+        if str(user.pin_code) == str(pin_code) and user.balance >= int(amount):
+            print(user.balance, 'Все хорошо')
+            user.balance -= int(amount)
+            db.session.commit()
+            payment = Payment.create({
+            "amount": {
+                "value": str(amount),
+                "currency": "RUB"
+            },
+            "confirmation": {
+                "type": "redirect",
+                "return_url": "http://127.0.0.1:5000/face-login"
+            },
+            "capture": True,
+            "description": f"Оплата от пользователя {user.id_zachet}",
+            "metadata": {
+                "user_id": user.id_zachet
+            }
+        })
+        else:
+            print('Недостаточно средств или неверный пин-код', 'error')
+        
+        return redirect(payment.confirmation.confirmation_url)
+        # return jsonify({
+        #     "confirmation_url": payment.confirmation.confirmation_url
+        # })
+        
+    return redirect(url_for('face_login'))
+
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    data = request.json
+    payment_id = data['object']['id']
+    payment = Payment.find(payment_id)
+    transaction = Transaction.query.filter_by(id=payment.metadata['transaction_id']).first()
+
+    if payment.status == 'succeeded':
+        transaction.status = 'succeeded'  # Обновляем статус транзакции
+        # Здесь можно добавить дополнительные действия, например, зачисление средств на счет
+    elif payment.status == 'cancelled':
+        transaction.status = 'cancelled'
+        # Возврат средств, если это необходимо
+
+    db.session.commit()
+    return 'Webhook received', 200
+
+
+
 
 if __name__ == '__main__':
     with app.app_context():

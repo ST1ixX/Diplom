@@ -7,3 +7,8 @@
     border-radius: 10px;
 }
 
+.user_avatar img{
+    width: 100px;
+    height: 100px;
+}
+

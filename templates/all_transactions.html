@@ -8,6 +8,7 @@
         {% for transaction in transactions %}
             <div class="transaction">
                 <p>Номер транзакции: {{ transaction.id }}</p>
+                <p>ID пользователя: {{ transaction.user.id_zachet }}</p>
                 <p>Сумма: {{ transaction.amount }}</p>
                 <p>Дата: {{ transaction.date }}</p>
                 <p>Где была покупка: {{ transaction.payment_point.name }} - {{ transaction.payment_point.location }}</p>

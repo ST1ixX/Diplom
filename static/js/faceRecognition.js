@@ -43,6 +43,7 @@ video.addEventListener('play', async () => {
   const canvas = faceapi.createCanvasFromMedia(video);
   document.body.append(canvas);
   const displaySize = { width: video.width, height: video.height };
+  canvas.style.top = '151px';
   faceapi.matchDimensions(canvas, displaySize);
 
   setInterval(async () => {

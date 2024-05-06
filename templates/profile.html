@@ -11,6 +11,9 @@
             {% endif %}
         {% endwith %}
         <div class="user-info">
+            <div class="user_avatar">
+                <img src="{{ url_for('static', filename='images/avatar.png') }}" alt="Аватар пользователя">
+            </div>
             <div class="balance">
                 <h2>Ваш баланс: {{ current_user.balance }}</h2>
             </div>

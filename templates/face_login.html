@@ -153,7 +153,6 @@
   </nav>
   <div class="video-container">
     <video id="video" width="600" height="450" autoplay></video>
-    <canvas id="canvas"></canvas>
   </div>
   <div class="pay_amount">
     {% with messages = get_flashed_messages() %}
@@ -163,7 +162,7 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
-    <form method="post" action="/pay" class="payment-form"> 
+    <form method="post" action="/create_payment" class="payment-form"> 
       <input type="hidden" name="user_id" value=""> 
       <input type="text" name="amount_pay" placeholder="Введите сумму">
       <input type="text" name="pin_code" placeholder="Введите пин код">
