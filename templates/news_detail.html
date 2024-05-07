@@ -8,7 +8,13 @@
         <div class="news">
             <p>{{ news.full_text }}</p>
             <p>{{ news.time.date() }}</p>
-            <a href="/news" class="more">Вернуться</a>
+            <div class="buttons">
+                <a href="/news" class="more">Вернуться</a>
+                {% if current_user.is_admin %}
+                <a href="/news/{{ news.id }}/delete" class="delete">Удалить</a>
+                <a href="/news/{{ news.id }}/update" class="update">Редактировать</a>
+                {% endif %}
+            </div>
             <hr>
         </div>
     </div>

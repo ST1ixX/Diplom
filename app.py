@@ -14,6 +14,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from dotenv import load_dotenv
 from functools import wraps
 import uuid
+from forms import RegistrationForm, LoginForm
 
 
 load_dotenv()
@@ -114,6 +115,25 @@ def store_required(f):
     return decorated_function
 
 
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('news'))
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
+
+def send_confirmation(email, token):
+    confirm_url = url_for('confirm_email', token=token, _external=True)
+    msg = Message('Подтверждение учетной записи', sender='apppay2024@yandex.ru', recipients=[email])
+    msg.body = f'Для подтверждения учетной записи и завершения регистрации перейдите по ссылке: {confirm_url}'
+    mail.send(msg)
+
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -133,14 +153,28 @@ def profile():
     return render_template('profile.html', store_points=store_points)
 
 
-@app.route('/upload-video', methods=['POST'])
-def upload_video():
-    video = request.files['video']
-    if video:
-        filename = secure_filename(video.filename)
-        video.save(os.path.join('./upload-video', filename))
-        return 'Видео успешно загружено', 200
-    return 'Ошибка при загрузке видео', 400
+@app.route('/transactions')
+@login_required
+def transactions():
+    transactions = Transaction.query.join(Users).filter(Users.id_zachet == current_user.id_zachet).all()
+    return render_template('transactions.html', transactions=transactions)
+
+
+@app.route('/all_transactions')
+@login_required
+def all_transactions():
+    transactions = Transaction.query \
+    .join(PaymentPoint, Transaction.payment_point_id == PaymentPoint.id) \
+    .filter(PaymentPoint.owner_id == current_user.id_zachet) \
+    .all()
+
+    return render_template('all_transactions.html', transactions=transactions)
+
+
+@app.route('/news')
+def news():
+    news = News.query.order_by(News.time.desc()).all()
+    return render_template('news.html', news=news)
 
 
 @app.route('/add_money', methods=['POST', 'GET'])
@@ -189,16 +223,61 @@ def add_news():
     else:
         return render_template('add_news.html')
     
-@app.route('/news')
-def news():
-    news = News.query.order_by(News.time.desc()).all()
-    return render_template('news.html', news=news)
 
+@app.route('/news/<int:news_id>/delete')
+@admin_required
+def delete_news(news_id):
+    news = News.query.get(news_id)
+    db.session.delete(news)
+    db.session.commit()
+    return redirect('/news')
+    
 
 @app.route('/news/<int:news_id>')
 def news_detail(news_id):
     news = News.query.get(news_id)
     return render_template('news_detail.html', news=news)
+
+
+
+@app.route('/ballance')
+@login_required
+def ballance():
+    return render_template('ballance.html')
+
+
+@app.route('/add_ballance', methods=['POST', 'GET'])
+@login_required
+def add_ballance():
+    if request.method == 'POST':
+        amount = request.form['money']
+        pin_code = request.form['pincode']
+
+        user = Users.query.filter_by(id_zachet=current_user.id_zachet).first()
+        if user and str(user.pin_code) == str(pin_code):
+            user.balance += int(amount)
+            db.session.commit()
+            
+            payment = Payment.create({
+                "amount": {
+                    "value": str(amount),
+                    "currency": "RUB"
+                },
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": "http://127.0.0.1:5000/profile"
+                },
+                "capture": True,
+                "description": f"Оплата от пользователя {user.id_zachet}",
+                "metadata": {
+                    "user_id": user.id_zachet
+                }
+            })
+            return redirect(payment.confirmation.confirmation_url)
+        else:
+            flash('Произошла ошибка', 'error')
+        
+    return redirect(url_for('profile'))
 
 
 @app.route('/set_pincode', methods=['POST', 'GET'])
@@ -277,27 +356,6 @@ def login():
     return render_template('profile.html')
 
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('news'))
-
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Users.query.get(int(user_id))
-
-
-def send_confirmation(email, token):
-    confirm_url = url_for('confirm_email', token=token, _external=True)
-    msg = Message('Подтверждение учетной записи', sender='apppay2024@yandex.ru', recipients=[email])
-    msg.body = f'Для подтверждения учетной записи и завершения регистрации перейдите по ссылке: {confirm_url}'
-    mail.send(msg)
-
-
-
 @app.route('/confirm_email/<token>')
 def confirm_email(token):
     temp_user = TemporaryUser.query.filter_by(token=token).first()
@@ -316,6 +374,7 @@ def create_folder():
     folder_name = request.args.get('folderName')
     os.makedirs(folder_name, exist_ok=True)
     return 'Folder created', 200
+
 
 @app.route('/save-snapshot', methods=['POST'])
 def save_snapshot():
@@ -441,64 +500,45 @@ def pay():
     return redirect(url_for('face_login'))
 
 
-@app.route('/transactions')
-@login_required
-def transactions():
-    transactions = Transaction.query.join(Users).filter(Users.id_zachet == current_user.id_zachet).all()
-    return render_template('transactions.html', transactions=transactions)
-
-
-@app.route('/all_transactions')
-@login_required
-def all_transactions():
-    transactions = Transaction.query \
-    .join(PaymentPoint, Transaction.payment_point_id == PaymentPoint.id) \
-    .filter(PaymentPoint.owner_id == current_user.id_zachet) \
-    .all()
-
-    return render_template('all_transactions.html', transactions=transactions)
-
-
 @app.route('/create_payment', methods=['POST', 'GET'])
 @login_required
 def create_payment():
-    amount = request.form['amount_pay']
-    pin_code = request.form['pin_code']
-    user_id = request.form['user_id']
-
     if request.method == 'POST':
+        amount = request.form['amount_pay']
+        pin_code = request.form['pin_code']
+        user_id = request.form['user_id']
+
         user = Users.query.filter_by(id_zachet=user_id).first()
-        print('*' * 100)
-        print(user_id, user.id_zachet)
-        print(user.pin_code, pin_code)
-        print(user.balance, amount)
-        print('*' * 100)
-        if str(user.pin_code) == str(pin_code) and user.balance >= int(amount):
-            print(user.balance, 'Все хорошо')
+        if user and str(user.pin_code) == str(pin_code) and user.balance >= int(amount):
             user.balance -= int(amount)
+            # Здесь создаем транзакцию
+            transaction = Transaction(
+                id_zachet=user.id_zachet,
+                amount=amount,
+                # Если нужен ID точки оплаты, добавьте его здесь
+                # payment_point_id=payment_point_id
+            )
+            db.session.add(transaction)
             db.session.commit()
+            
             payment = Payment.create({
-            "amount": {
-                "value": str(amount),
-                "currency": "RUB"
-            },
-            "confirmation": {
-                "type": "redirect",
-                "return_url": "http://127.0.0.1:5000/face-login"
-            },
-            "capture": True,
-            "description": f"Оплата от пользователя {user.id_zachet}",
-            "metadata": {
-                "user_id": user.id_zachet
-            }
-        })
+                "amount": {
+                    "value": str(amount),
+                    "currency": "RUB"
+                },
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": "http://127.0.0.1:5000/face-login"
+                },
+                "capture": True,
+                "description": f"Оплата от пользователя {user.id_zachet}",
+                "metadata": {
+                    "user_id": user.id_zachet
+                }
+            })
+            return redirect(payment.confirmation.confirmation_url)
         else:
-            print('Недостаточно средств или неверный пин-код', 'error')
-        
-        return redirect(payment.confirmation.confirmation_url)
-        # return jsonify({
-        #     "confirmation_url": payment.confirmation.confirmation_url
-        # })
+            flash('Недостаточно средств или неверный пин-код', 'error')
         
     return redirect(url_for('face_login'))
 
@@ -521,6 +561,14 @@ def webhook():
     return 'Webhook received', 200
 
 
+@app.route('/upload-video', methods=['POST'])
+def upload_video():
+    video = request.files['video']
+    if video:
+        filename = secure_filename(video.filename)
+        video.save(os.path.join('./upload-video', filename))
+        return 'Видео успешно загружено', 200
+    return 'Ошибка при загрузке видео', 400
 
 
 if __name__ == '__main__':

@@ -1,0 +1,29 @@
+.main-page {
+    text-align: center;
+    padding: 20px;
+}
+
+.features section {
+    margin: 20px;
+    display: inline-block;
+    width: 30%;
+    vertical-align: top;
+}
+
+.features img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+.features h2 {
+    color: #333;
+    font-size: 1.5em;
+}
+
+.features p {
+    font-size: 18px;
+    color: #666;
+    padding: 10px;
+    font-weight: 700;
+}

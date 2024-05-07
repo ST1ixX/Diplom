@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form action="/add_ballance" method="post">
+        <input type="text" name="money" id="money" placeholder="Сколько пополнить баланс?">
+        <input type="password" name="pincode" id="pincode" placeholder="Пинкод">
+        <input type="submit" value="Пополнить баланс">
+    </form>
+{% endblock %}
+

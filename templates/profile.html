@@ -11,6 +11,18 @@
             {% endif %}
         {% endwith %}
         <div class="user-info">
+            <div class="settings-button">
+                <button class="settings-btn">
+                    <ion-icon name="settings-outline" style="font-size: 24px;"></ion-icon>
+                </button>
+                <div class="settings-list">
+                    <div class="settings-item"><a href="/ballance">Пополнить счет</a></div>
+                    <div class="settings-item"><button id="start-recording">Начать запись</button></div>
+                    <div class="settings-item"><button id="capture-snapshots">Захватить снимки</button></div>
+                    <div class="settings-item"><a href="/forgot_password" id="change-password">Сменить пароль</a></div>
+                    <div class="settings-item"><button id="change-pin">Сменить пинкод</button></div>
+                </div>
+            </div>
             <div class="user_avatar">
                 <img src="{{ url_for('static', filename='images/avatar.png') }}" alt="Аватар пользователя">
             </div>
@@ -36,14 +48,15 @@
             </div>
             {% endif %}
         </div>
-        <button id="start-recording">Начать запись</button>
-        <button id="capture-snapshots">Захватить снимки</button>
-        <form method="post" action="/set_pincode" class="profile_form">
-            <input type="number" name="password" placeholder="Введите пароль для смены пинкода">
-            <input type="number" name="pin_code" placeholder="Введите пинкод">
-            <button type="submit" class="button_add_money">Назначить пин</button>
-        </form>
+        <div class="settings">
+            <form method="post" action="/set_pincode" class="profile_form">
+                <input type="text" name="password" placeholder="Введите пароль для смены пинкода">
+                <input type="text" name="pin_code" placeholder="Введите пинкод">
+                <button type="submit" class="button_add_money">Назначить пин</button>
+            </form>
+        </div>
     </div>
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
     <script src="{{ url_for('static', filename='js/uploadVideo.js') }}"></script>
     <script src="{{ url_for('static', filename='js/captureAndSaveSnapshots.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">

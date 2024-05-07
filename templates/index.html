@@ -3,7 +3,26 @@
 {% block title %}Главная страница{% endblock %}
 
 {% block content %}
-    
-    <h1>Главная страница</h1>
+<div class="main-page">
+    <h1>Оплата с помощью распознавания лиц</h1>
+    <p>Используйте современные технологии для быстрой и безопасной оплаты ваших покупок и услуг.</p>
+    <div class="features">
+        <section>
+            <img src="{{ url_for('static', filename='images/face_payment.jpg') }}" alt="Быстрая оплата">
+            <h2>Быстрая оплата</h2>
+            <p>Система распознавания лиц ускоряет процесс оплаты, минимизируя время ожидания.</p>
+        </section>
+        <section>
+            <img src="{{ url_for('static', filename='images/secur_payment.jpg') }}" alt="Безопасные транзакции">
+            <h2>Безопасные транзакции</h2>
+            <p>Ваши данные надёжно защищены благодаря передовым методам шифрования и аутентификации.</p>
+        </section>
+        <section>
+            <img src="{{ url_for('static', filename='images/quick_payment.jpg') }}" alt="Легкий доступ">
+            <h2>Легкий доступ</h2>
+            <p>Оплатите покупки простым взглядом, без необходимости использования карт или наличных.</p>
+        </section>
+    </div>
+</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 {% endblock %}
-
