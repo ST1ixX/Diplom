@@ -14,7 +14,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from dotenv import load_dotenv
 from functools import wraps
 import uuid
-from forms import RegistrationForm, LoginForm
+from forms import RegisterForm
 
 
 load_dotenv()
@@ -39,25 +39,25 @@ class Users(UserMixin, db.Model):
     id_zachet = db.Column(db.Integer, nullable=False, unique=True)
     pin_code = db.Column(db.Integer, default=0)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(20), nullable=False)
+    password = db.Column(db.String(128), nullable=False)  
     balance = db.Column(db.Integer, default=0)
     confirmed = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
-    is_store = db.Column(db.Boolean, default=False) 
+    is_store = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'<Users {self.id}>'
 
-
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    id_zachet = db.Column(db.Integer, db.ForeignKey('users.id_zachet'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    payment_point_id = db.Column(db.Integer, db.ForeignKey('payment_point.id'))
     date = db.Column(db.DateTime, default=datetime.utcnow)
-    payment_point_id = db.Column(db.Integer, db.ForeignKey('payment_point.id'), nullable=False)
     amount = db.Column(db.Integer, nullable=False)
-    
-    user = db.relationship('Users', backref=db.backref('transactions', lazy=True))
-    payment_point = db.relationship('PaymentPoint', backref=db.backref('transactions', lazy=True))
+    description = db.Column(db.String(255), nullable=True)  
+
+    user = db.relationship('Users', backref=db.backref('transactions', lazy='select'))
+    payment_point = db.relationship('PaymentPoint', backref=db.backref('transactions', lazy='select'))
 
     def __repr__(self):
         return f'<Transaction {self.id}>'
@@ -65,11 +65,13 @@ class Transaction(db.Model):
 
 class PaymentPoint(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id_zachet'), nullable=False)  # Ссылка на владельца-магазина
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id_zachet'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     location = db.Column(db.String(100), nullable=False)
+    latitude = db.Column(db.Float) 
+    longitude = db.Column(db.Float)  
 
-    owner = db.relationship('Users', backref=db.backref('payment_points', lazy=True))
+    owner = db.relationship('Users', backref=db.backref('payment_points', lazy='select'))
 
     def __repr__(self):
         return f'<PaymentPoint {self.id}>'
@@ -156,8 +158,9 @@ def profile():
 @app.route('/transactions')
 @login_required
 def transactions():
-    transactions = Transaction.query.join(Users).filter(Users.id_zachet == current_user.id_zachet).all()
+    transactions = Transaction.query.filter_by(user_id=current_user.id_zachet).all()
     return render_template('transactions.html', transactions=transactions)
+
 
 
 @app.route('/all_transactions')
@@ -448,7 +451,6 @@ def add_payment():
         return render_template('add_payment.html')
 
 
-
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
@@ -474,6 +476,7 @@ def pay():
     if request.method == 'POST':
         amount = request.form['amount_pay']
         pin_code = request.form['pin_code']
+        user_id = request.form['user_id']
 
         if current_user.is_store:
             payment_point = PaymentPoint.query.filter_by(owner_id=current_user.id_zachet).first()
@@ -483,10 +486,11 @@ def pay():
 
             payment_point_id = payment_point.id
 
-        if str(current_user.pin_code) == str(pin_code) and current_user.balance >= int(amount):
-            current_user.balance -= int(amount)
+        user = Users.query.filter_by(id_zachet=user_id).first()
+        if str(user.pin_code) == str(pin_code) and user.balance >= int(amount):
+            user.balance -= int(amount)
             transaction = Transaction(
-                id_zachet=current_user.id_zachet,
+                user_id=user_id,
                 amount=amount,
                 payment_point_id=payment_point_id
             )
@@ -500,49 +504,6 @@ def pay():
     return redirect(url_for('face_login'))
 
 
-@app.route('/create_payment', methods=['POST', 'GET'])
-@login_required
-def create_payment():
-    if request.method == 'POST':
-        amount = request.form['amount_pay']
-        pin_code = request.form['pin_code']
-        user_id = request.form['user_id']
-
-        user = Users.query.filter_by(id_zachet=user_id).first()
-        if user and str(user.pin_code) == str(pin_code) and user.balance >= int(amount):
-            user.balance -= int(amount)
-            # Здесь создаем транзакцию
-            transaction = Transaction(
-                id_zachet=user.id_zachet,
-                amount=amount,
-                # Если нужен ID точки оплаты, добавьте его здесь
-                # payment_point_id=payment_point_id
-            )
-            db.session.add(transaction)
-            db.session.commit()
-            
-            payment = Payment.create({
-                "amount": {
-                    "value": str(amount),
-                    "currency": "RUB"
-                },
-                "confirmation": {
-                    "type": "redirect",
-                    "return_url": "http://127.0.0.1:5000/face-login"
-                },
-                "capture": True,
-                "description": f"Оплата от пользователя {user.id_zachet}",
-                "metadata": {
-                    "user_id": user.id_zachet
-                }
-            })
-            return redirect(payment.confirmation.confirmation_url)
-        else:
-            flash('Недостаточно средств или неверный пин-код', 'error')
-        
-    return redirect(url_for('face_login'))
-
-
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
@@ -552,10 +513,8 @@ def webhook():
 
     if payment.status == 'succeeded':
         transaction.status = 'succeeded'  # Обновляем статус транзакции
-        # Здесь можно добавить дополнительные действия, например, зачисление средств на счет
     elif payment.status == 'cancelled':
         transaction.status = 'cancelled'
-        # Возврат средств, если это необходимо
 
     db.session.commit()
     return 'Webhook received', 200
@@ -569,6 +528,17 @@ def upload_video():
         video.save(os.path.join('./upload-video', filename))
         return 'Видео успешно загружено', 200
     return 'Ошибка при загрузке видео', 400
+
+
+@app.route('/regist', methods=['GET', 'POST'])
+def regist():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        # Здесь код для обработки подтвержденной формы
+        flash('Вы успешно зарегистрированы!', 'success')
+        return redirect(url_for('some_page'))
+    return render_template('reg.html', form=form)
+
 
 
 if __name__ == '__main__':

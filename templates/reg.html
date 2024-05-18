@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<form action="{{ url_for('regist') }}" method="post" id="register-form">
+    {{ form.hidden_tag() }}
+    <h2>{{ form.email.label }} {{ form.email(class="input__container") }}</h2>
+    <h2>{{ form.id_zachet.label }} {{ form.id_zachet(class="input__container") }}</h2>
+    <h2>{{ form.pin_code.label }} {{ form.pin_code(class="input__container") }}</h2>
+    <h2>{{ form.password.label }} {{ form.password(class="input__container") }}</h2>
+    <h2>{{ form.repeat_password.label }} {{ form.repeat_password(class="input__container") }}</h2>
+    <h2>{{ form.submit(id="reg_btn") }}</h2>
+</form>
+
+{% endblock content %}
+

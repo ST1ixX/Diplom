@@ -209,7 +209,7 @@ html{
     background: transparent;
   }
   
-  .modal__content input[type="email"], input[type="password"], input[type="text"]{
+  .modal__content input[type="email"], input[type="password"], input[type="text"], input[type="number"]{
     display: block;
     margin-top: 5px;
     width: 100%;

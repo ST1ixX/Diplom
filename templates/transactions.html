@@ -3,16 +3,16 @@
 {% block title %} История платежей {% endblock %}
 
 {% block content %}
-    <h1>История </h1>
-    <div class="transactions_container">
-        {% for transaction in transactions %}
-            <div class="transaction">
-                <p>Номер транзакции: {{ transaction.id }}</p>
-                <p>Сумма: {{ transaction.amount }}</p>
-                <p>Дата: {{ transaction.date }}</p>
-                <p>Где была покупка: {{ transaction.payment_point.name }} - {{ transaction.payment_point.location }}</p>
-            </div>
-        {% endfor %}
+<h1>История платежей</h1>
+<div class="transactions_container">
+    {% for transaction in transactions %}
+    <div class="transaction">
+        <p>Номер транзакции: {{ transaction.id }}</p>
+        <p>Сумма: {{ transaction.amount }}</p>
+        <p>Дата: {{ transaction.date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+        <p>Где была покупка: {{ transaction.payment_point.name }} - {{ transaction.payment_point.location }}</p>
     </div>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
+    {% endfor %}
+</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
 {% endblock %}

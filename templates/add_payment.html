@@ -3,10 +3,10 @@
 {% block content %}
     <h1>Add News</h1>
     <form method="post">
-        <input type="text" name="name" placeholder="Название">
-        <input type="text" name="location" placeholder="нахождение">
+        <input type="text" name="name" placeholder="Название" required>
+        <input type="text" name="location" placeholder="Нахождение" required>
+        <input type="text" name="latitude" placeholder="Широта" required>
+        <input type="text" name="longitude" placeholder="Долгота" required>
         <button type="submit">Добавить</button>
     </form>
 {% endblock %}
-
-
