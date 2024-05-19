@@ -1,24 +1,62 @@
-  /* Информация */
-  .info__container{
-    height: 400px;
-    margin-top: 50px;
-    display: flex;
-    justify-content: center;
-    background-color: #1b17174d;
-    font-size: 40px;
-    color: #fdfdfd;
-  
+/* Enhanced Information Container Styles */
+.info__container {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  align-items: center;
+  margin-top: 50px; /* Space from the top for breathing room */
+  background-color: rgba(27, 23, 29, 0.3); /* Subtle dark background for contrast */
+  color: #ffffff; /* Ensures text is readable against a dark background */
+  font-size: 18px; /* Slightly larger for better legibility */
+  padding: 20px; /* Padding for spacing inside the container */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15); /* Subtle shadow for 3D effect */
+  border-radius: 8px; /* Rounded corners for a modern look */
+}
+
+/* Map container styles with better visibility and interaction */
+.yan__map {
+  width: 100%; /* Full width of the container */
+  background-color: #f0f4f8; /* Lighter background to make the map stand out */
+  height: 400px; /* Fixed height for the map */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 2px solid #ffffff; /* White border for a neat separation */
+  border-radius: 8px 8px 0 0; /* Rounded top corners for a smooth look */
+}
+
+/* Information text container for clarity */
+.info {
+  width: 100%; /* Full width of the container */
+  padding: 20px; /* Adequate padding for text separation */
+  background-color: #ffffff; /* White background for better readability */
+  color: #333333; /* Darker text color for contrast */
+  display: flex;
+  flex-direction: column; /* Organized in a column */
+  justify-content: center; /* Center the text vertically */
+  align-items: center; /* Center the text horizontally */
+  text-align: center; /* Center the text */
+  border-radius: 0 0 8px 8px; /* Rounded bottom corners for a smooth look */
+}
+
+/* Styling text elements */
+.info p {
+  margin: 10px 0; /* Margin for spacing between lines */
+  font-size: 18px; /* Increase font size for readability */
+  line-height: 1.6; /* Line height for better readability */
+}
+
+/* Responsive Design Adjustments */
+@media (max-width: 768px) {
+  .info__container {
+      height: auto; /* Flexible height on small screens */
   }
-  
-  .yan__map {
-    display: flex;
-    justify-content: center;
-    background-color: azure;
-    width: 30%;
-    height: 100%;
+
+  .yan__map, .info {
+      width: 100%; /* Full width for each section */
+      border-bottom: none; /* Remove border to prevent visual clutter */
   }
-  
-  .info{
-    width: 70%;
+
+  .info {
+      padding-top: 20px; /* Extra padding on top when stacked */
   }
-    
+}

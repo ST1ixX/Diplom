@@ -158,19 +158,49 @@ def profile():
 @app.route('/transactions')
 @login_required
 def transactions():
-    transactions = Transaction.query.filter_by(user_id=current_user.id_zachet).all()
+    query = Transaction.query
+    search_term = request.args.get('search')
+    sort_by = request.args.get('sort_by')
+
+    if search_term:
+        query = query.filter(Transaction.user_id.contains(search_term) | Transaction.amount.contains(search_term))
+    
+    if sort_by == 'date_desc':
+        query = query.order_by(Transaction.date.desc())
+    elif sort_by == 'date_asc':
+        query = query.order_by(Transaction.date.asc())
+    elif sort_by == 'amount_desc':
+        query = query.order_by(Transaction.amount.desc())
+    elif sort_by == 'amount_asc':
+        query = query.order_by(Transaction.amount.asc())
+
+    transactions = query.all()
     return render_template('transactions.html', transactions=transactions)
 
 
-
 @app.route('/all_transactions')
-@login_required
+@store_required
 def all_transactions():
-    transactions = Transaction.query \
-    .join(PaymentPoint, Transaction.payment_point_id == PaymentPoint.id) \
-    .filter(PaymentPoint.owner_id == current_user.id_zachet) \
-    .all()
+    query = Transaction.query \
+        .join(PaymentPoint, Transaction.payment_point_id == PaymentPoint.id) \
+        .filter(PaymentPoint.owner_id == current_user.id_zachet)
+    
+    search_term = request.args.get('search')
+    sort_by = request.args.get('sort_by')
 
+    if search_term:
+        query = query.filter(Transaction.user_id.contains(search_term) | Transaction.amount.contains(search_term))
+    
+    if sort_by == 'date_desc':
+        query = query.order_by(Transaction.date.desc())
+    elif sort_by == 'date_asc':
+        query = query.order_by(Transaction.date.asc())
+    elif sort_by == 'amount_desc':
+        query = query.order_by(Transaction.amount.desc())
+    elif sort_by == 'amount_asc':
+        query = query.order_by(Transaction.amount.asc())
+
+    transactions = query.all()
     return render_template('all_transactions.html', transactions=transactions)
 
 
@@ -284,6 +314,7 @@ def add_ballance():
 
 
 @app.route('/set_pincode', methods=['POST', 'GET'])
+@login_required
 def set_pincode():
     if request.method == 'POST':
         pin_code = request.form['pin_code']
@@ -391,6 +422,7 @@ def save_snapshot():
 
 
 @app.route('/face-login', methods = ['GET', 'POST'])
+@store_required
 def face_login():
     return render_template('face_login.html')
 
@@ -534,11 +566,10 @@ def upload_video():
 def regist():
     form = RegisterForm()
     if form.validate_on_submit():
-        # Здесь код для обработки подтвержденной формы
-        flash('Вы успешно зарегистрированы!', 'success')
-        return redirect(url_for('some_page'))
+        # Здесь можно добавить логику создания пользователя и сохранения его в базу данных
+        flash('Вы успешно зарегистрировались!', 'success')
+        return redirect(url_for('login'))  # Перенаправление на страницу входа после регистрации
     return render_template('reg.html', form=form)
-
 
 
 if __name__ == '__main__':

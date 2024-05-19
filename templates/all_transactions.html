@@ -3,17 +3,27 @@
 {% block title %} Транзакции {% endblock %}
 
 {% block content %}
-    <h1>История транзакций</h1>
-    <div class="transactions_container">
-        {% for transaction in transactions %}
-            <div class="transaction">
-                <p>Номер транзакции: {{ transaction.id }}</p>
-                <p>ID пользователя: {{ transaction.user_id }}</p>
-                <p>Сумма: {{ transaction.amount }}</p>
-                <p>Дата: {{ transaction.date }}</p>
-                <p>Где была покупка: {{ transaction.payment_point.name }} - {{ transaction.payment_point.location }}</p>
-            </div>
-        {% endfor %}
-    </div>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
+<h1 class="page-title">История транзакций</h1>
+<form action="/all_transactions" method="get" class="search-sort-form">
+    <input type="text" name="search" placeholder="Поиск по клиенту или сумме" value="{{ request.args.get('search', '') }}">
+    <select name="sort_by">
+        <option value="date_desc" {% if request.args.get('sort_by') == 'date_desc' %}selected{% endif %}>Дата (убывание)</option>
+        <option value="date_asc" {% if request.args.get('sort_by') == 'date_asc' %}selected{% endif %}>Дата (возрастание)</option>
+        <option value="amount_desc" {% if request.args.get('sort_by') == 'amount_desc' %}selected{% endif %}>Сумма (убывание)</option>
+        <option value="amount_asc" {% if request.args.get('sort_by') == 'amount_asc' %}selected{% endif %}>Сумма (возрастание)</option>
+    </select>
+    <button type="submit">Применить</button>
+</form>
+<div class="transactions_container">
+    {% for transaction in transactions %}
+        <div class="transaction">
+            <p>Номер транзакции: {{ transaction.id }}</p>
+            <p>ID пользователя: {{ transaction.user_id }}</p>
+            <p>Сумма: {{ transaction.amount }}</p>
+            <p>Дата: {{ transaction.date }}</p>
+            <p>Где была покупка: {{ transaction.payment_point.name }} - {{ transaction.payment_point.location }}</p>
+        </div>
+    {% endfor %}
+</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
 {% endblock %}

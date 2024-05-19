@@ -1,17 +1,64 @@
-.transactions_container{
+.transactions_container {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 90%; 
+    margin: auto; 
+    max-width: 800px; 
 }
 
-.transaction{
+.transaction {
     margin-top: 20px;
-    border: 1px solid black;
+    border: 1px solid #ccc; 
     border-radius: 10px;
     padding: 20px;
-    background-color: #f9f9f9; 
+    background-color: #ffffff; 
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    transition: transform 0.3s ease; 
+}
+
+.transaction:hover {
+    transform: translateY(-3px); 
+    border-color: #007bff; 
+}
+
+.transaction p {
+    font-size: 16px; 
+    color: #333; 
+    padding: 5px 0; 
+}
+
+/* Стилизация для заголовка на странице */
+.transactions_container > h1 {
+    color: #007bff; 
+    margin-bottom: 20px; 
+}
+
+
+.search-sort-form {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-sort-form input, .search-sort-form select, .search-sort-form button {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.search-sort-form button {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.search-sort-form button:hover {
+    background-color: #0056b3;
 }

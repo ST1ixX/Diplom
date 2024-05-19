@@ -1,24 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %} {{ news.title}} {% endblock %}
+{% block title %} {{ news.title }} {% endblock %}
 
 {% block content %}
-    <h1>{{ news.title }}</h1>
-    <div class="news_container">
-        <div class="news">
-            <p>{{ news.full_text }}</p>
-            <p>{{ news.time.date() }}</p>
-            <div class="buttons">
-                <a href="/news" class="more">Вернуться</a>
-                {% if current_user.is_admin %}
-                <a href="/news/{{ news.id }}/delete" class="delete">Удалить</a>
-                <a href="/news/{{ news.id }}/update" class="update">Редактировать</a>
-                {% endif %}
-            </div>
-            <hr>
+<h1>{{ news.title }}</h1>
+<div class="news_container">
+    <div class="news">
+        <p>{{ news.full_text }}</p>
+        <p>Опубликовано: {{ news.time.date() }}</p>
+        <div class="buttons">
+            <a href="/news" class="more">Вернуться</a>
+            {% if current_user.is_admin %}
+            <a href="/news/{{ news.id }}/delete" class="delete">Удалить</a>
+            <a href="/news/{{ news.id }}/update" class="update">Редактировать</a>
+            {% endif %}
         </div>
+        <hr>
     </div>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
 {% endblock %}
-
-

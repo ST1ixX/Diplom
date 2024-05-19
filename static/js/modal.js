@@ -48,3 +48,26 @@ document.getElementById("register__btn").addEventListener("click", function(e) {
       document.body.parentNode.classList.remove("no-scroll")
     }
   })
+
+
+
+// Burger menu
+
+document.addEventListener("DOMContentLoaded", function() {
+  const burgerMenu = document.querySelector('.burger-menu');
+  const headerMenu = document.querySelector('.header__menu');
+  const links = document.querySelectorAll('.header__menu a'); // Выбор всех ссылок в меню
+
+  burgerMenu.addEventListener('click', function() {
+      headerMenu.classList.toggle('open');
+  });
+
+  links.forEach(link => {
+      link.addEventListener('click', function() {
+          headerMenu.classList.remove('open'); // Закрытие меню при клике на любую ссылку
+      });
+  });
+});
+
+
+

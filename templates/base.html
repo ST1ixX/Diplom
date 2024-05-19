@@ -4,12 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="shortcut icon" href="https://icons8.ru/icon/ckrjM2xjKegD/cash" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/logo.jpg') }}" type="image/x-icon">
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
     <div class="container">
+        <div class="burger-menu">
+            <ion-icon name="menu-outline"></ion-icon>
+        </div>        
         <nav class="header">
+            <div class="header__logo">
+                <a href="/"><img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Логотип"></a>
+            </div>
             <div class="header__menu">
                 <ul>
                     <li class="list">
@@ -28,8 +34,6 @@
                             <span class="text">О нас</span>
                         </a>
                     </li>
-        
-                    <!-- Условие для отображения разных ссылок в зависимости от роли -->
                     {% if current_user.is_store %}
                         <li class="list">
                             <a href="/add_payment">
@@ -65,7 +69,6 @@
                             </a>
                         </li>
                     {% endif %}
-        
                     <li class="list">
                         <a href="/profile">
                             <span class="icon">
@@ -93,8 +96,6 @@
                             </a>
                         </li>
                     {% endif %}
-        
-                    <!-- Дополнительные ссылки для администраторов -->
                     {% if current_user.is_admin %}
                         <li class="list">
                             <a href="/add_news">
@@ -125,7 +126,6 @@
             </div>
         </nav>    
         {% block content %}{% endblock %}
-    </div>
     </div>
     <div class="modal__box" id="my-modal">
         <div class="modal__content">
@@ -191,9 +191,54 @@
             </form>
         </div>
     </div>
+    <footer>
+        <div class="faq">
+            <button class="accordion">Ответы на часто задаваемые вопросы</button>
+            <div class="panel">
+                <ul>
+                    <li>
+                        <button class="accordion">Вопрос 1</button>
+                        <div class="panel">
+                            <p>Ответ на вопрос 1.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <button class="accordion">Вопрос 2</button>
+                        <div class="panel">
+                            <p>Ответ на вопрос 2.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <button class="accordion">Вопрос 3</button>
+                        <div class="panel">
+                            <p>Ответ на вопрос 3.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+    
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var accordions = document.getElementsByClassName("accordion");
+
+            for (var i = 0; i < accordions.length; i++) {
+                accordions[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    var panel = this.nextElementSibling;
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        // Убедитесь, что scrollHeight доступен и правильно вычисляется
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-

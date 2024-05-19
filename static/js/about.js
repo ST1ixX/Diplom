@@ -5,7 +5,7 @@ ymaps.ready(init);
 function init(){
     var myMap = new ymaps.Map("map", {
         center: [47.237332, 39.712270],
-        zoom: 16
+        zoom: 17
     });
 
     var placemarks = [
@@ -23,6 +23,11 @@ function init(){
             coords: [47.237674, 39.710400],
             hint: 'Столовая ДГТУ',
             balloon: 'Столовая ДГТУ'
+        },
+        {
+            coords: [47.237341, 39.712195],
+            hint: 'Печать ДГТУ',
+            balloon: '3 этаж'
         },
     ];
 

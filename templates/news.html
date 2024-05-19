@@ -3,19 +3,17 @@
 {% block title %} Новости {% endblock %}
 
 {% block content %}
-    <h1>Новости</h1>
-    <div class="news_container">
-        {% for news in news %}
-            <div class="news">
-                <h2>{{ news.title }}</h2>
-                <p>{{ news.intro_text }}</p>
-                <p>{{ news.time.date() }}</p>
-                <a href="/news/{{ news.id }}" class="more">Узнать больше</a>
-                <hr>
-            </div>
-        {% endfor %}
+<h1>Новости</h1>
+<div class="news_container">
+    {% for news_item in news %}
+    <div class="news">
+        <h2>{{ news_item.title }}</h2>
+        <p>{{ news_item.intro_text }}</p>
+        <p>Опубликовано: {{ news_item.time.date() }}</p>
+        <a href="/news/{{ news_item.id }}" class="more">Узнать больше</a>
+        <hr>
     </div>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+    {% endfor %}
+</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
 {% endblock %}
-
-

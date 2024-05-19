@@ -1,15 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, IntegerField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, NumberRange
-
+from wtforms import StringField, PasswordField, IntegerField, SubmitField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange
 
 class RegisterForm(FlaskForm):
-    email = StringField('Email', validators=[Email(message='Введите корректный email адрес.')])
-    id_zachet = IntegerField('Номер зачетной книжки', validators=[DataRequired(), NumberRange(min=100000, max=999999, message='Номер зачетной книжки должен быть в диапазоне от 100000 до 999999.')])
-    pin_code = IntegerField('Защитный пинкод', validators=[DataRequired(), NumberRange(min=1000, max=9999, message='Пинкод должен быть от 1000 до 9999.')])
-    password = PasswordField('Пароль', validators=[DataRequired(), Length(min=6, max=25, message='Пароль должен быть длиной от 6 до 25 символов.')])
-    repeat_password = PasswordField('Повторите пароль', validators=[DataRequired(), EqualTo('password', message='Пароли должны совпадать.')])
+    email_reg = StringField('Email', validators=[DataRequired(), Email()])
+    id_zachet_reg = IntegerField('Номер зачетной книжки', validators=[DataRequired()])
+    pin_code = IntegerField('Пинкод', validators=[DataRequired(), NumberRange(min=1000, max=9999)])
+    password_reg = PasswordField('Пароль', validators=[DataRequired(), Length(min=6)])
+    repeat_password_reg = PasswordField('Повторите пароль', validators=[DataRequired(), EqualTo('password_reg', message='Пароли должны совпадать')])
     submit = SubmitField('Зарегистрироваться')
-
-
-

@@ -1,410 +1,319 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,700;1,100&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Roboto' , sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 
-html{
-  height: 100%;
-  background-color: #9cd8e2c4;
+html, body {
+    height: 100%;
+    background-color: #e0f7fa;
 }
 
 .body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;  /* Минимальная высота равна высоте вьюпорта */
-  display: flex;  /* Использование flexbox для выравнивания контента */
-  justify-content: center;  /* Горизонтальное выравнивание */
-  align-items: center;  /* Вертикальное выравнивание */
-  background-color: #5532d3c4;  /* Цвет фона body */
+    min-width: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f2f2f2;
 }
 
 .container {
-  width: 100%;  /* Ширина контейнера относительно родительского элемента */
-  max-width: 1200px;  /* Максимальная ширина контейнера */
-  margin: 100px auto;  /* Верхний и нижний отступ 100px, автоматическое центрирование по горизонтали */
-  padding: 0 20px;  /* Внутренние отступы справа и слева */
-  background-color: #32d3d3c4;  /* Цвет фона контейнера */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  /* Тень вокруг контейнера для лучшего визуального выделения */
-  border-radius: 10px;  /* Скругление углов контейнера */
+    width: 100%;
+    max-width: 1200px;
+    margin: 100px auto; 
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
 }
 
 
-/*Flash-сообщения*/
-
+/* Flash messages */
 .flash {
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #aaa;
-  border-radius: 5px;
-  color: #333;
-  background-color: #f2f2f2;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: #333;
+    background-color: #fafafa;
 }
 
 .flash.error {
-  border-color: #e00;
-  background-color: #fdd;
-  color: #600;
+    border-color: #e74c3c;
+    background-color: #f2dede;
+    color: #a94442;
 }
 
-.flash.warning{
-  border-color: #e00;
-  background-color: rgb(69, 139, 230);
-  color: #600;
+.flash.warning {
+    border-color: #f39c12;
+    background-color: #fcf8e3;
+    color: #8a6d3b;
 }
 
-
-/**/
-
+/* Header */
 .header {
-  top: 10px;
-  right: 0; 
-  width: auto; 
-  position: fixed;
-  display: flex;
-  justify-content: flex-end; 
-  align-items: center;
-  z-index: 99;
-  transition: 0.4s;
-  flex-direction: row;
-  padding: 10px 20px; 
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between; /* Обеспечим пространство между логотипом и меню */
+    align-items: center;
+    padding: 10px 20px;
+    background-color: rgba(0, 188, 212, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.header__logo img {
+    height: 70px; /* Высота логотипа */
+    transition: transform 0.3s ease;
+}
+
+.header__logo img:hover {
+    transform: scale(1.1); /* Увеличение логотипа при наведении */
 }
 
 .header__menu {
-  background-color: rgba(5, 153, 37, 0.85);
-  border-radius: 10px;
-  transition: 0.4s;
-  backdrop-filter: blur(10px);
-  display: flex; 
+    display: flex;
+    flex-direction: row;
 }
 
 .header__menu ul {
-  display: flex; 
-  padding: 0;
-  margin: 0;
-  align-items: center; 
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .header__menu ul li {
-  list-style: none; 
-  padding: 10px; 
+    padding: 10px;
 }
 
 .header__menu ul li a {
-  text-decoration: none;
-  color: white; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header__menu ul li a .icon {
-  font-size: 1.5em; 
-  margin-right: 5px; 
-}
-
-.header__menu ul li:hover {
-  background-color: #04820b; 
-}
-
-
-/* Авторизация*/
-.modal__box{
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100vh;
-    z-index: 10;
-    background-color: rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(10px);
-    display: grid;
-    align-items: center;
-    justify-content: center;
-    overflow-y: auto;
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity .4s, visibility .4s;
-  }
-  
-  .modal__content{
     display: flex;
-    flex-direction: column;
     align-items: center;
-    max-width: 500px;
-    padding: 45px;
-    z-index: 1;
-    transform: scale(0);
-    transition: transform .4s;
-    background-color: rgb(255, 255, 255);
-    border-radius: 10px;
-    box-shadow: 11px 18px 14px -2px rgba(34, 60, 80, 0.32);
-  }
-  
-  .modal__content label{
-    margin-top: 10px;
-    margin-bottom: 5px;
-    display: block;
-    font-size: 20px;
-    font-weight: bold;
-  }
-  
-  .input__conteiner {
-    margin: 10px 0;
-    width: 200px;
-  }
-  
-  #foggot__password{
-    font-size: 20px;
+    color: white;
     text-decoration: none;
-  }
-  
-  #remember-me {
-    margin-top: 10px;
-  }
-  
-  .modal__content h2{
-   text-align: center;
-   color: black;
-   margin: 10px 0px 20px;
-   font-size: 25px;
-  }
-  
-  #submit__btn{
-    width: 100%;
-    height: 40px;
-    border: none;
-    outline: none;
-    background-color: #aa7272e1;
-    font-size: 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    color: #ffffff;
-  }
-  
-  #register__btn{
-    width: 100%;
-    height: 40px;
-    border: none;
-    outline: none;
-    background-color: #aa7272e1;
-    font-size: 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    color: #ffffff;
-  }
-  
-  #close-btn{
-    border-style: none;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-    background: transparent;
-  }
-  
-  .modal__content input[type="email"], input[type="password"], input[type="text"], input[type="number"]{
-    display: block;
-    margin-top: 5px;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.header__menu ul li a:hover {
+    background-color: #00796b;
+}
+
+.header__menu ul li .icon {
+    margin-right: 8px;
+}
+
+/* Common input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"]{
     width: 100%;
     padding: 10px;
-    outline: none;
-    border: 1px solid #aaa;
-    border-radius: 10px;
-    font-weight: 400;
-    font-size: 20px;
-  
-  }
-  
-  .modal__content input[type="checkbox"]{
-    margin-left: 5px;
-  }
-  
-  .modal__content button img{
-    width: 20px;
-    height: 20px;
-    top: 10px;
-    right: 10px;
-    transition: .3s;
-  }
-  
-  .modal__content button img:hover{
-    width: 40px;
-    height: 40px;
-  
-  }
-  
-  .modal__box.open {
-    visibility: visible;
-    opacity: 1;
-  }
-  
-  .modal__box.open .modal__content {
-    transform: scale(1);
-  }
-  
-  
-  /* Регистрация */
-  
-  .popup__register{
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Modal */
+.modal__box, .popup__register {
     position: fixed;
     left: 0;
     top: 0;
     width: 100%;
     height: 100vh;
     z-index: 10;
-    background-color: rgba(0, 0, 0, 0.25);
-    display: grid;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
     align-items: center;
     justify-content: center;
-    overflow-y: auto;
     visibility: hidden;
-    backdrop-filter: blur(10px);
     opacity: 0;
-    transition: opacity .4s, visibility .4s;
-  }
-  
-  .modal__register{
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 500px;
-    padding: 45px;
-    z-index: 1;
-    transform: scale(0);
-    transition: transform .4s;
-    background-color: rgb(255, 255, 255);
+    transition: opacity 0.4s, visibility 0.4s;
+}
+
+.modal__content, .modal__register {
+    background-color: white;
+    padding: 40px;
     border-radius: 10px;
-    box-shadow: 11px 18px 14px -2px rgba(34, 60, 80, 0.32);
-  }
-  
-  .modal__register label{
-    margin-top: 10px;
-    margin-bottom: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(0);
+    transition: transform 0.4s;
+}
+
+.modal__box.open, .popup__register.open {
+    visibility: visible;
+    opacity: 1;
+}
+
+.modal__box.open .modal__content, .popup__register.open .modal__register {
+    transform: scale(1);
+}
+
+.modal__content h2, .modal__register h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+.modal__content label, .modal__register label {
     display: block;
-    font-size: 20px;
-    font-weight: bold;
-  }
-  
-  
-  #close-reg-btn{
-    border-style: none;
+    margin: 10px 0 5px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+#submit__btn, #register__btn, #reg_btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #00796b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#submit__btn:hover, #register__btn:hover {
+    background-color: #004d40;
+}
+
+#close-btn, #close-reg-btn {
     position: absolute;
     top: 10px;
     right: 10px;
+    background: none;
+    border: none;
     cursor: pointer;
-    background: transparent;
-  }
-  
-  .modal__register h2{
-   text-align: center;
-   color: black;
-   margin: 10px 0px 20px;
-   font-size: 25px;
-  }
-  
-  .modal__register input{
-    display: block;
-    margin-top: 5px;
-    width: 100%;
-    padding: 10px;
-    outline: none;
-    border: 1px solid #aaa;
-    border-radius: 10px;
-    font-weight: 400;
-    font-size: 20px;
-  
-  }
-  
-  .modal__register button img{
+}
+
+#close-btn img, #close-reg-btn img {
     width: 20px;
     height: 20px;
-    top: 10px;
-    right: 10px;
-    transition: .3s;
-  }
-  
-  .modal__register button img:hover{
-    width: 40px;
-    height: 40px;
-  
-  }
-  
-  #reg_btn{
-    width: 100%;
-    height: 40px;
-    border: none;
-    outline: none;
-    background-color: #aa7272e1;
-    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+#close-btn img:hover, #close-reg-btn img:hover {
+    transform: scale(1.2);
+}
+
+/* FAQ */
+
+.faq {
+    width: 80%;
+    margin: 50px auto;
+    text-align: left;
+    background-color: #ffffff;
     border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    overflow: visible;
+}
+
+.faq h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 24px;
+}
+
+.accordion {
+    background-color: #007bff;
+    color: white;
     cursor: pointer;
-    margin-top: 10px;
+    padding: 15px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 18px;
+    transition: background-color 0.4s;
+    border-radius: 5px;
+    margin: 5px 0;
+}
+
+.accordion:hover, .accordion.active {
+    background-color: #0056b3;
+}
+
+.panel {
+    padding: 0 18px;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    border-bottom: 1px solid #ccc;
     margin-bottom: 10px;
-    color: #ffffff;
-  }
-  
-  .popup__register.open {
-    visibility: visible;
-    opacity: 1;
-  }
-  
-  .popup__register.open .modal__register {
-    transform: scale(1);
-  }
-
-
-/* Добавление новости */
-
-.form_news{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
 }
 
-.form_news input{
-  display: block;
-  margin-top: 5px;
-  width: 100%;
-  padding: 10px;
-  outline: none;
-  border: 1px solid #aaa;
-  border-radius: 10px;
-  font-weight: 400;
-  font-size: 20px;
+.panel p {
+    padding: 10px 0;
+    margin: 0;
+    font-size: 16px;
+    color: #333;
 }
 
-.form_news textarea{
-  width: 100%;
-  height: 100px;
-  padding: 10px;
-  outline: none;
-  border: 1px solid #aaa;
-  border-radius: 10px;
-  font-weight: 400;
-  font-size: 20px;
-  resize: none;
+.accordion.active + .panel {
+    padding: 10px; 
+    overflow: auto; 
 }
 
-#btn_add_news{
-  width: 100%;
-  height: 40px;
-  border: none;
-  outline: none;
-  background-color: #aa7272e1;
-  font-size: 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  color: #ffffff;
+
+/* Burger menu */
+.burger-menu {
+    display: none;
+    cursor: pointer;
+    padding: 10px;
 }
+
+@media (max-width: 900px) {
+    .burger-menu {
+        font-size: 36px;
+        font-weight: 700;
+        display: block;
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        z-index: 1500; 
+    }
+
+    .header__menu {
+        flex-direction: column;
+        position: fixed;
+        top: 19px;
+        right: 0;
+        width: 40%;
+        height: 100vh;
+        background-color: rgba(0, 188, 212, 0.9);
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .header__menu ul {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .header__menu ul li {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .header__menu.open {
+        transform: translateX(0);
+    }
+}
+
 
