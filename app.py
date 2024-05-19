@@ -204,6 +204,31 @@ def all_transactions():
     return render_template('all_transactions.html', transactions=transactions)
 
 
+@app.route('/all_user_transactions')
+@admin_required
+def all_user_transactions():
+    query = Transaction.query \
+        .join(PaymentPoint, Transaction.payment_point_id == PaymentPoint.id)
+    
+    search_term = request.args.get('search')
+    sort_by = request.args.get('sort_by')
+
+    if search_term:
+        query = query.filter(Transaction.user_id.contains(search_term) | Transaction.amount.contains(search_term))
+    
+    if sort_by == 'date_desc':
+        query = query.order_by(Transaction.date.desc())
+    elif sort_by == 'date_asc':
+        query = query.order_by(Transaction.date.asc())
+    elif sort_by == 'amount_desc':
+        query = query.order_by(Transaction.amount.desc())
+    elif sort_by == 'amount_asc':
+        query = query.order_by(Transaction.amount.asc())
+
+    transactions = query.all()
+    return render_template('all_user_transactions.html', transactions=transactions)
+
+
 @app.route('/news')
 def news():
     news = News.query.order_by(News.time.desc()).all()

@@ -29,6 +29,11 @@ function init(){
             hint: 'Печать ДГТУ',
             balloon: '3 этаж'
         },
+        {
+            coords: [47.238037, 39.711077],
+            hint: 'Кофейня',
+            balloon: '1 этаж'
+        },
     ];
 
     placemarks.forEach(function(placemark) {
