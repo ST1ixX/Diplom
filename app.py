@@ -37,7 +37,7 @@ Configuration.secret_key = os.getenv('secret_key')
 class Users(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_zachet = db.Column(db.Integer, nullable=False, unique=True)
-    pin_code = db.Column(db.Integer, default=0)
+    pin_code = db.Column(db.String(128), default='0')
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)  
     balance = db.Column(db.Integer, default=0)
@@ -158,7 +158,7 @@ def profile():
 @app.route('/transactions')
 @login_required
 def transactions():
-    query = Transaction.query
+    query = Transaction.query.filter_by(user_id=current_user.id_zachet)
     search_term = request.args.get('search')
     sort_by = request.args.get('sort_by')
 
@@ -312,7 +312,7 @@ def add_ballance():
         pin_code = request.form['pincode']
 
         user = Users.query.filter_by(id_zachet=current_user.id_zachet).first()
-        if user and str(user.pin_code) == str(pin_code):
+        if user and check_password_hash(user.pin_code, pin_code):
             user.balance += int(amount)
             db.session.commit()
             
@@ -346,8 +346,10 @@ def set_pincode():
         password = request.form['password'] 
         user = Users.query.filter_by(id_zachet=current_user.id_zachet).first()
         if user and check_password_hash(user.password, password):
+
+            hashed_pin_code = generate_password_hash(pin_code)
             try:
-                user.pin_code = int(pin_code)
+                user.pin_code = hashed_pin_code
                 db.session.commit()
                 flash("Пин-код успешно изменён.", 'success')  # Flash сообщение об успехе
                 return redirect(url_for('profile'))
@@ -378,8 +380,9 @@ def register_user():
             return redirect(url_for('register_user'))
 
         hashed_password = generate_password_hash(password)
+        hashed_pin_code = generate_password_hash(pin_code)
         token = s.dumps(email, salt='email-confirm')
-        new_temp_user = TemporaryUser(id_zachet=id_zachet, email=email, password=hashed_password, pin_code=pin_code, token=token)
+        new_temp_user = TemporaryUser(id_zachet=id_zachet, email=email, password=hashed_password, pin_code=hashed_pin_code, token=token)
         db.session.add(new_temp_user)
         db.session.commit()
 
@@ -544,13 +547,62 @@ def pay():
             payment_point_id = payment_point.id
 
         user = Users.query.filter_by(id_zachet=user_id).first()
-        if str(user.pin_code) == str(pin_code) and user.balance >= int(amount):
+        store_owner = Users.query.filter_by(id_zachet=payment_point.owner_id).first()
+        if check_password_hash(user.pin_code, pin_code)  and user.balance >= int(amount):
             user.balance -= int(amount)
+            store_owner.balance += int(amount)
+
             transaction = Transaction(
                 user_id=user_id,
                 amount=amount,
                 payment_point_id=payment_point_id
             )
+
+            db.session.add(transaction)
+            db.session.commit()
+            flash('Оплата прошла успешно', 'success')
+            return redirect(url_for('face_login'))
+        else:
+            flash('Недостаточно средств или неверный пин-код', 'error')
+
+    return redirect(url_for('face_login'))
+
+
+@app.route('/hand_pay')
+@store_required
+def hand_pay():
+    return render_template('hand_pay.html')
+
+
+@app.route('/pay_amount', methods=['POST', 'GET'])
+@store_required
+def pay_amount():
+    if request.method == 'POST':
+        amount = request.form['amount_pay']
+        pin_code = request.form['pin_code']
+        user_id = request.form['user_id']
+
+        if current_user.is_store:
+            payment_point = PaymentPoint.query.filter_by(owner_id=current_user.id_zachet).first()
+            if not payment_point:
+                flash('У вашего магазина нет зарегистрированных точек оплаты.', 'error')
+                return redirect(url_for('profile'))
+
+            payment_point_id = payment_point.id
+
+        user = Users.query.filter_by(id_zachet=user_id).first()
+        store_owner = Users.query.filter_by(id_zachet=payment_point.owner_id).first()
+        if check_password_hash(user.pin_code, pin_code)  and user.balance >= int(amount):
+
+            user.balance -= int(amount)
+            store_owner.balance += int(amount)
+
+            transaction = Transaction(
+                user_id=user_id,
+                amount=amount,
+                payment_point_id=payment_point_id
+            )
+
             db.session.add(transaction)
             db.session.commit()
             flash('Оплата прошла успешно', 'success')
@@ -569,7 +621,7 @@ def webhook():
     transaction = Transaction.query.filter_by(id=payment.metadata['transaction_id']).first()
 
     if payment.status == 'succeeded':
-        transaction.status = 'succeeded'  # Обновляем статус транзакции
+        transaction.status = 'succeeded' 
     elif payment.status == 'cancelled':
         transaction.status = 'cancelled'
 

@@ -15,9 +15,11 @@
     <form method="post" action="/pay" class="payment-form"> 
         <input type="hidden" name="user_id" value=""> 
         <input type="text" name="amount_pay" placeholder="Введите сумму">
-        <input type="text" name="pin_code" placeholder="Введите пин код">
+        <input type="password" name="pin_code" placeholder="Введите пин код">
         <button type="submit" id="pay_btn">Оплатить</button>
     </form>
+
+    <a href="{{ url_for('hand_pay') }}">Оплата вручную</a>
 </div>
 <script defer src="{{ url_for('static', filename='js/face-api.min.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/faceRecognition.js') }}"></script>

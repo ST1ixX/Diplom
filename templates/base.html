@@ -34,50 +34,50 @@
                             <span class="text">О нас</span>
                         </a>
                     </li>
-                    {% if current_user.is_store %}
-                        <li class="list">
-                            <a href="/add_payment">
-                                <span class="icon">
-                                    <ion-icon name="storefront-outline"></ion-icon>
-                                </span>
-                                <span class="text">Добавить новую точку</span>
-                            </a>
-                        </li>
-                        <li class="list">
-                            <a href="/all_transactions">
-                                <span class="icon">
-                                    <ion-icon name="swap-vertical-outline"></ion-icon>
-                                </span>
-                                <span class="text">Все транзакции</span>
-                            </a>
-                        </li>
-                        <li class="list">
-                            <a href="/face-login">
-                                <span class="icon">
-                                    <ion-icon name="happy-outline"></ion-icon>
-                                </span>
-                                <span class="text">Режим оплаты</span>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="list">
-                            <a href="/transactions">
-                                <span class="icon">
-                                    <ion-icon name="card-outline"></ion-icon>
-                                </span>
-                                <span class="text">Мои покупки</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                    <li class="list">
-                        <a href="/profile">
-                            <span class="icon">
-                                <ion-icon name="person-outline"></ion-icon>
-                            </span>
-                            <span class="text">Профиль</span>
-                        </a>
-                    </li>
                     {% if current_user.is_authenticated %}
+                        {% if current_user.is_store %}
+                            <li class="list">
+                                <a href="/add_payment">
+                                    <span class="icon">
+                                        <ion-icon name="storefront-outline"></ion-icon>
+                                    </span>
+                                    <span class="text">Добавить новую точку</span>
+                                </a>
+                            </li>
+                            <li class="list">
+                                <a href="/all_transactions">
+                                    <span class="icon">
+                                        <ion-icon name="swap-vertical-outline"></ion-icon>
+                                    </span>
+                                    <span class="text">Все транзакции</span>
+                                </a>
+                            </li>
+                            <li class="list">
+                                <a href="/face-login">
+                                    <span class="icon">
+                                        <ion-icon name="happy-outline"></ion-icon>
+                                    </span>
+                                    <span class="text">Режим оплаты</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="list">
+                                <a href="/transactions">
+                                    <span class="icon">
+                                        <ion-icon name="card-outline"></ion-icon>
+                                    </span>
+                                    <span class="text">Мои покупки</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="list">
+                            <a href="/profile">
+                                <span class="icon">
+                                    <ion-icon name="person-outline"></ion-icon>
+                                </span>
+                                <span class="text">Профиль</span>
+                            </a>
+                        </li>
                         <li class="list">
                             <a href="/logout" id="log-out">
                                 <span class="icon">
@@ -86,6 +86,40 @@
                                 <span class="text">Выход</span>
                             </a>
                         </li>
+                        {% if current_user.is_admin %}
+                            <li class="list">
+                                <a href="/add_news">
+                                    <span class="icon">
+                                        <ion-icon name="paper-plane-outline"></ion-icon>
+                                    </span>
+                                    <span class="text">Добавить новость</span>
+                                </a>
+                            </li>
+                            <li class="list">
+                                <a href="/add_money">
+                                    <span class="icon">
+                                        <ion-icon name="cash-outline"></ion-icon>
+                                    </span>
+                                    <span class="text">Начислить деньги</span>
+                                </a>
+                            </li>
+                            <li class="list">
+                                <a href="/add_payment">
+                                    <span class="icon">
+                                        <ion-icon name="storefront-outline"></ion-icon>
+                                    </span>
+                                    <span class="text">Добавить новую точку</span>
+                                </a>
+                            </li>
+                            <li class="list">
+                                <a href="/all_user_transactions">
+                                    <span class="icon">
+                                        <ion-icon name="swap-vertical-outline"></ion-icon>
+                                    </span>
+                                    <span class="text">Все транзакции пользователей</span>
+                                </a>
+                            </li>
+                        {% endif %}
                     {% else %}
                         <li class="list">
                             <a href="#" id="auth">
@@ -96,43 +130,9 @@
                             </a>
                         </li>
                     {% endif %}
-                    {% if current_user.is_admin %}
-                        <li class="list">
-                            <a href="/add_news">
-                                <span class="icon">
-                                    <ion-icon name="paper-plane-outline"></ion-icon>
-                                </span>
-                                <span class="text">Добавь новость</span>
-                            </a>
-                        </li>
-                        <li class="list">
-                            <a href="/add_money">
-                                <span class="icon">
-                                    <ion-icon name="cash-outline"></ion-icon>
-                                </span>
-                                <span class="text">Начислить деньги</span>
-                            </a>
-                        </li>
-                        <li class="list">
-                            <a href="/add_payment">
-                                <span class="icon">
-                                    <ion-icon name="storefront-outline"></ion-icon>
-                                </span>
-                                <span class="text">Добавить новую точку</span>
-                            </a>
-                        </li>
-                        <li class="list">
-                            <a href="/all_user_transactions">
-                                <span class="icon">
-                                    <ion-icon name="swap-vertical-outline"></ion-icon>
-                                </span>
-                                <span class="text">Все транзакции пользователей</span>
-                            </a>
-                        </li>
-                    {% endif %}
                 </ul>
             </div>
-        </nav>    
+        </nav>  
         {% block content %}{% endblock %}
     </div>
     <div class="modal__box" id="my-modal">

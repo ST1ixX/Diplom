@@ -26,14 +26,14 @@
             <div class="user_avatar">
                 <img src="{{ url_for('static', filename='images/avatar.png') }}" alt="Аватар пользователя">
             </div>
+            <div class="email">
+                <h2>Ваша почта: {{ current_user.email }}</h2>
+            </div>
             <div class="balance">
                 <h2>Ваш баланс: {{ current_user.balance }}</h2>
             </div>
             <div class="id">
                 <h2>Ваш ID: {{ current_user.id_zachet }}</h2>
-            </div>
-            <div class="pincode">
-                <h2>Ваш пинкод: {{ current_user.pin_code }}</h2>
             </div>
             {% if current_user.is_store %}
             <div class="store">

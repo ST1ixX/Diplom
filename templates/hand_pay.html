@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Оплата вручную
+{% endblock %}
+
+{% block content %}
+    <div class="pay_amount">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="post" action="/pay_amount" class="payment-form"> 
+            <input type="text" name="amount_pay" placeholder="Введите сумму">
+            <input type="password" name="user_id" placeholder="Введите ваш id"> 
+            <input type="password" name="pin_code" placeholder="Введите пин код">
+            <button type="submit" id="pay_btn">Оплатить</button>
+        </form>
+    </div>
+{% endblock %}
+
