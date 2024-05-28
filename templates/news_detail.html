@@ -12,7 +12,6 @@
             <a href="/news" class="more">Вернуться</a>
             {% if current_user.is_admin %}
             <a href="/news/{{ news.id }}/delete" class="delete">Удалить</a>
-            <a href="/news/{{ news.id }}/update" class="update">Редактировать</a>
             {% endif %}
         </div>
         <hr>

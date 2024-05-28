@@ -114,7 +114,7 @@ html, body {
     margin-right: 8px;
 }
 
-/* Common input styles */
+/* input styles */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -317,5 +317,28 @@ input[type="number"]{
 }
 
 
+#add_ballance {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+#add_ballance:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#add_ballance:active {
+    background-color: #004088;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
 
 
