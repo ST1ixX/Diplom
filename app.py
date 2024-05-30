@@ -1,7 +1,7 @@
 from datetime import datetime
 import yookassa
 from yookassa import Configuration, Payment
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, abort, flash
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, abort, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
 import os
 import traceback
@@ -15,7 +15,8 @@ from dotenv import load_dotenv
 from functools import wraps
 import uuid
 from forms import RegisterForm
-
+import io
+from cryptography.fernet import Fernet
 
 load_dotenv()
 s = URLSafeTimedSerializer('6fff877cdac3cef7ecd27e28f2630fb26df851dd35fdcc05913efd1003b2179a')
@@ -32,6 +33,32 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 mail = Mail(app)
 Configuration.account_id = os.getenv('accountId')
 Configuration.secret_key = os.getenv('secret_key')
+
+
+# Генерация или загрузка ключа шифрования
+def load_key():
+    try:
+        return open("secret.key", "rb").read()
+    except FileNotFoundError:
+        key = Fernet.generate_key()
+        with open("secret.key", "wb") as key_file:
+            key_file.write(key)
+        return key
+
+key = load_key()
+
+# Функции шифрования и расшифровки
+def encrypt_image(file_path, key):
+    f = Fernet(key)
+    with open(file_path, "rb") as file:
+        original_data = file.read()
+    encrypted_data = f.encrypt(original_data)
+    with open(file_path, "wb") as file:
+        file.write(encrypted_data)
+
+def decrypt_image(encrypted_data, key):
+    f = Fernet(key)
+    return f.decrypt(encrypted_data)
 
 
 class Users(UserMixin, db.Model):
@@ -444,9 +471,25 @@ def save_snapshot():
     snapshot = request.files['snapshot']
     if snapshot:
         filename = secure_filename(snapshot.filename)
-        snapshot.save(os.path.join(folder_name, filename))
-        return 'Snapshot saved', 200
-    return 'Error saving snapshot', 400
+        file_path = os.path.join(folder_name, filename)
+        snapshot.save(file_path)
+        encrypt_image(file_path, key)
+        return 'Снимок сохранён', 200
+    return 'Ошибка сохранения снимка', 400
+
+
+@app.route('/snapshots/<path:filename>')
+def serve_snapshots(filename):
+    try:
+        file_path = os.path.join('snapshots', filename)
+        with open(file_path, "rb") as file:
+            encrypted_data = file.read()
+        decrypted_data = decrypt_image(encrypted_data, key)
+        decrypted_image = io.BytesIO(decrypted_data)
+        decrypted_image.seek(0)
+        return send_file(decrypted_image, mimetype='image/jpeg')
+    except Exception as e:
+        return f'Ошибка: {str(e)}', 404
 
 
 @app.route('/face-login', methods = ['GET', 'POST'])
@@ -459,9 +502,10 @@ def face_login():
 def models(filename):
     return send_from_directory('models', filename)
 
-@app.route('/snapshots/<path:filename>')
-def serve_snapshots(filename):
-    return send_from_directory('snapshots', filename)
+
+# @app.route('/snapshots/<path:filename>')
+# def serve_snapshots(filename):
+#     return send_from_directory('snapshots', filename)
 
 
 @app.route('/get-user-ids')
@@ -643,10 +687,12 @@ def upload_video():
 def regist():
     form = RegisterForm()
     if form.validate_on_submit():
-        # Здесь можно добавить логику создания пользователя и сохранения его в базу данных
         flash('Вы успешно зарегистрировались!', 'success')
-        return redirect(url_for('login'))  # Перенаправление на страницу входа после регистрации
+        return redirect(url_for('login')) 
     return render_template('reg.html', form=form)
+
+
+
 
 
 if __name__ == '__main__':
