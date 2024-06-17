@@ -19,7 +19,7 @@
     <div class="transaction">
         <p>Номер транзакции: {{ transaction.id }}</p>
         <p>Сумма: {{ transaction.amount }}</p>
-        <p>Дата: {{ transaction.date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+        <p>Дата: {{ transaction.date_local }}</p>
         <p>Где была покупка: {{ transaction.payment_point.name }} - {{ transaction.payment_point.location }}</p>
         <p>Id клиента: {{ transaction.user_id }}</p>
     </div>

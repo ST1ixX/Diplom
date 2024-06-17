@@ -50,13 +50,12 @@ document.getElementById("register__btn").addEventListener("click", function(e) {
   })
 
 
-
-// Burger menu
+// Бургер
 
 document.addEventListener("DOMContentLoaded", function() {
   const burgerMenu = document.querySelector('.burger-menu');
   const headerMenu = document.querySelector('.header__menu');
-  const links = document.querySelectorAll('.header__menu a'); // Выбор всех ссылок в меню
+  const links = document.querySelectorAll('.header__menu a'); 
 
   burgerMenu.addEventListener('click', function() {
       headerMenu.classList.toggle('open');
@@ -64,14 +63,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
   links.forEach(link => {
       link.addEventListener('click', function() {
-          headerMenu.classList.remove('open'); // Закрытие меню при клике на любую ссылку
+          headerMenu.classList.remove('open'); 
       });
   });
 });
 
 
 // ЧАВО
-
 
 document.addEventListener("DOMContentLoaded", function() {
   var accordions = document.getElementsByClassName("accordion");

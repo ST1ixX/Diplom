@@ -1,5 +1,5 @@
 const video = document.getElementById("video");
-const recognitionThreshold = 10;
+const recognitionThreshold = 5;
 let recognitionCount = 0;
 
 Promise.all([

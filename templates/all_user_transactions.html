@@ -20,7 +20,7 @@
             <p>Номер транзакции: {{ transaction.id }}</p>
             <p>ID пользователя: {{ transaction.user_id }}</p>
             <p>Сумма: {{ transaction.amount }}</p>
-            <p>Дата: {{ transaction.date }}</p>
+            <p>Дата: {{ transaction.date_local }}</p>
             <p>Где была покупка: {{ transaction.payment_point.name }} - {{ transaction.payment_point.location }}</p>
         </div>
     {% endfor %}

@@ -13,10 +13,11 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from functools import wraps
-import uuid
-from forms import RegisterForm
 import io
 from cryptography.fernet import Fernet
+import pytz
+
+
 
 load_dotenv()
 s = URLSafeTimedSerializer('6fff877cdac3cef7ecd27e28f2630fb26df851dd35fdcc05913efd1003b2179a')
@@ -28,7 +29,7 @@ login_manager = LoginManager(app)
 app.config['MAIL_SERVER'] = 'smtp.yandex.ru'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'apppay2024@yandex.ru'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 mail = Mail(app)
 Configuration.account_id = os.getenv('accountId')
@@ -126,6 +127,7 @@ class TemporaryUser(db.Model):
         return f'<TemporaryUser {self.email}>'
 
 
+# Проверка роли администратора
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -135,6 +137,7 @@ def admin_required(f):
     return decorated_function
 
 
+# Проверка роли владельца магазина
 def store_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -144,6 +147,7 @@ def store_required(f):
     return decorated_function
 
 
+# Выход пользователя из сессии
 @app.route('/logout')
 @login_required
 def logout():
@@ -151,11 +155,13 @@ def logout():
     return redirect(url_for('news'))
 
 
+# Загрузка информации о пользователе в сессии
 @login_manager.user_loader
 def load_user(user_id):
     return Users.query.get(int(user_id))
 
 
+# Функция отправки письма подтверждения
 def send_confirmation(email, token):
     confirm_url = url_for('confirm_email', token=token, _external=True)
     msg = Message('Подтверждение учетной записи', sender='apppay2024@yandex.ru', recipients=[email])
@@ -163,16 +169,19 @@ def send_confirmation(email, token):
     mail.send(msg)
 
 
+# Главная страница
 @app.route('/')
 def home():
     return render_template('index.html')
 
 
+# Информация о нас
 @app.route('/about')
 def about():
     return render_template('about.html')
 
 
+# Профиль
 @app.route('/profile', methods=['POST', 'GET'])
 @login_required
 def profile():
@@ -182,6 +191,7 @@ def profile():
     return render_template('profile.html', store_points=store_points)
 
 
+# Транзакции пользователя
 @app.route('/transactions')
 @login_required
 def transactions():
@@ -202,9 +212,15 @@ def transactions():
         query = query.order_by(Transaction.amount.asc())
 
     transactions = query.all()
+
+    local_timezone = pytz.timezone('Europe/Moscow')  # Установите нужный часовой пояс
+    for transaction in transactions:
+        transaction.date_local = transaction.date.replace(tzinfo=pytz.utc).astimezone(local_timezone).strftime('%Y-%m-%d %H:%M:%S')
+        
     return render_template('transactions.html', transactions=transactions)
 
 
+# Транзакции магазина
 @app.route('/all_transactions')
 @store_required
 def all_transactions():
@@ -228,9 +244,15 @@ def all_transactions():
         query = query.order_by(Transaction.amount.asc())
 
     transactions = query.all()
+
+    local_timezone = pytz.timezone('Europe/Moscow') 
+    for transaction in transactions:
+        transaction.date_local = transaction.date.replace(tzinfo=pytz.utc).astimezone(local_timezone).strftime('%Y-%m-%d %H:%M:%S')
+
     return render_template('all_transactions.html', transactions=transactions)
 
 
+# Все совершенные в системе транзакции
 @app.route('/all_user_transactions')
 @admin_required
 def all_user_transactions():
@@ -253,15 +275,22 @@ def all_user_transactions():
         query = query.order_by(Transaction.amount.asc())
 
     transactions = query.all()
+
+    local_timezone = pytz.timezone('Europe/Moscow')  # Установите нужный часовой пояс
+    for transaction in transactions:
+        transaction.date_local = transaction.date.replace(tzinfo=pytz.utc).astimezone(local_timezone).strftime('%Y-%m-%d %H:%M:%S')
+
     return render_template('all_user_transactions.html', transactions=transactions)
 
 
+# Новости
 @app.route('/news')
 def news():
     news = News.query.order_by(News.time.desc()).all()
     return render_template('news.html', news=news)
 
 
+# Пополнение баланса через ЮKassa
 @app.route('/add_money', methods=['POST', 'GET'])
 @admin_required
 def add_money():
@@ -287,6 +316,7 @@ def add_money():
         return render_template('add_money.html')
 
 
+# Добавление новостей
 @app.route('/add_news', methods=['POST', 'GET'])
 @admin_required
 def add_news():
@@ -309,6 +339,7 @@ def add_news():
         return render_template('add_news.html')
     
 
+# Удаление новостей
 @app.route('/news/<int:news_id>/delete')
 @admin_required
 def delete_news(news_id):
@@ -318,6 +349,7 @@ def delete_news(news_id):
     return redirect('/news')
     
 
+# Страница каждоой новости
 @app.route('/news/<int:news_id>')
 def news_detail(news_id):
     news = News.query.get(news_id)
@@ -325,12 +357,14 @@ def news_detail(news_id):
 
 
 
+# Страница с формой пополнения баланса
 @app.route('/ballance')
 @login_required
 def ballance():
     return render_template('ballance.html')
 
 
+# Пополнение счета
 @app.route('/add_ballance', methods=['POST', 'GET'])
 @login_required
 def add_ballance():
@@ -365,6 +399,7 @@ def add_ballance():
     return redirect(url_for('profile'))
 
 
+# Смена пикода
 @app.route('/set_pincode', methods=['POST', 'GET'])
 @login_required
 def set_pincode():
@@ -389,6 +424,7 @@ def set_pincode():
             return redirect(url_for('profile'))
 
 
+# Регистрация
 @app.route('/register', methods=['POST', 'GET'])
 def register_user():
     if request.method == 'POST':
@@ -420,6 +456,7 @@ def register_user():
         return render_template('index.html')
 
 
+# Авторизация
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -445,6 +482,7 @@ def login():
     return render_template('profile.html')
 
 
+# Проверка ссылки подтверждения
 @app.route('/confirm_email/<token>')
 def confirm_email(token):
     temp_user = TemporaryUser.query.filter_by(token=token).first()
@@ -458,6 +496,7 @@ def confirm_email(token):
     return 'Ваш email подтвержден!', 200
 
 
+# Создание папки с изображением пользователя
 @app.route('/create-folder', methods=['POST'])
 def create_folder():
     folder_name = request.args.get('folderName')
@@ -465,6 +504,7 @@ def create_folder():
     return 'Folder created', 200
 
 
+# Сохранение изображений
 @app.route('/save-snapshot', methods=['POST'])
 def save_snapshot():
     folder_name = request.args.get('folderName')
@@ -478,6 +518,7 @@ def save_snapshot():
     return 'Ошибка сохранения снимка', 400
 
 
+# Установка пути для проверки изображений
 @app.route('/snapshots/<path:filename>')
 def serve_snapshots(filename):
     try:
@@ -492,22 +533,20 @@ def serve_snapshots(filename):
         return f'Ошибка: {str(e)}', 404
 
 
+# Страница с оплатой 
 @app.route('/face-login', methods = ['GET', 'POST'])
 @store_required
 def face_login():
     return render_template('face_login.html')
 
 
+# Получение пути к обученным моделям
 @app.route('/models/<path:filename>')
 def models(filename):
     return send_from_directory('models', filename)
 
 
-# @app.route('/snapshots/<path:filename>')
-# def serve_snapshots(filename):
-#     return send_from_directory('snapshots', filename)
-
-
+# Получение id пользователя из папки
 @app.route('/get-user-ids')
 def get_user_ids():
     directory = 'snapshots'
@@ -515,6 +554,7 @@ def get_user_ids():
     return jsonify(user_ids)
 
 
+# страница с формой заполнения почты для смены пароля
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -533,6 +573,7 @@ def forgot_password():
     return render_template('forgot_password.html')
 
 
+# Регистрация нового магазина
 @app.route('/add_payment', methods=['POST', 'GET'])
 @store_required  
 def add_payment():
@@ -555,6 +596,7 @@ def add_payment():
         return render_template('add_payment.html')
 
 
+# Проверка токена и смена пароля
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
@@ -574,6 +616,7 @@ def reset_password(token):
     return render_template('reset_password.html')
 
 
+# Оплата по лицу
 @app.route('/pay', methods=['POST', 'GET'])
 @store_required
 def pay():
@@ -612,12 +655,13 @@ def pay():
     return redirect(url_for('face_login'))
 
 
+# оплата в ручном режиме
 @app.route('/hand_pay')
 @store_required
 def hand_pay():
     return render_template('hand_pay.html')
 
-
+# Запись при оплате в ручном режиме
 @app.route('/pay_amount', methods=['POST', 'GET'])
 @store_required
 def pay_amount():
@@ -657,6 +701,7 @@ def pay_amount():
     return redirect(url_for('face_login'))
 
 
+# Вебхуки состояния платежа
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
@@ -671,28 +716,6 @@ def webhook():
 
     db.session.commit()
     return 'Webhook received', 200
-
-
-@app.route('/upload-video', methods=['POST'])
-def upload_video():
-    video = request.files['video']
-    if video:
-        filename = secure_filename(video.filename)
-        video.save(os.path.join('./upload-video', filename))
-        return 'Видео успешно загружено', 200
-    return 'Ошибка при загрузке видео', 400
-
-
-@app.route('/regist', methods=['GET', 'POST'])
-def regist():
-    form = RegisterForm()
-    if form.validate_on_submit():
-        flash('Вы успешно зарегистрировались!', 'success')
-        return redirect(url_for('login')) 
-    return render_template('reg.html', form=form)
-
-
-
 
 
 if __name__ == '__main__':
